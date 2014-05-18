@@ -2,7 +2,9 @@
 #define __LJ_DRIVER_H__
 #include <string>
 #include <map>
+
 #include "lj_parser.hpp"
+#include "lj_ast.h"
 
 // Tell Flex the lexer's prototype ...
 # define YY_DECL LJ::LJ_Parser::symbol_type yylex(LJ_Driver& driver)
@@ -15,9 +17,9 @@ public:
 	LJ_Driver();
 	virtual ~LJ_Driver();
 
-	std::map<std::string, int> variables;
+	std::map<std::string, __int64> variables;
 
-	int result_;
+	__int64 result_;
 
 	// Handling the scanner.
 	void ScanBegin();
@@ -36,5 +38,11 @@ public:
 	// Error handling.
 	void Error(const LJ::location& l, const std::string& m);
 	void Error(const std::string& m);
+
+	void AddFunction(LJ::FunctionDefiniton *f);
+	LJ::StatementList *statement_list_;
+private:
+	std::list<LJ::FunctionDefiniton *> function_list_;
+	
 };
 #endif // ! LJ_Driver_HH

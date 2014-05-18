@@ -2,7 +2,7 @@
 #include "lj_parser.hpp"
 
 LJ_Driver::LJ_Driver()
-: trace_scanning_(false), trace_parsing_(false)
+	: trace_scanning_(false), trace_parsing_(false), statement_list_(NULL)
 {
 	variables["one"] = 1;
 	variables["two"] = 2;
@@ -31,4 +31,9 @@ void LJ_Driver::Error(const LJ::location& l, const std::string& m)
 void LJ_Driver::Error(const std::string& m)
 {
 	std::cerr << m << std::endl;
+}
+
+void LJ_Driver::AddFunction(LJ::FunctionDefiniton *f)
+{
+	function_list_.push_back(f);
 }

@@ -27,10 +27,24 @@
     <ClCompile Include="lj_scanner.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="lj_ast.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="lj_driver.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="lj_ast.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="lj_parser.yy">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="lj_scanner.ll">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
 </Project>
