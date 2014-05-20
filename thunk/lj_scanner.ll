@@ -45,6 +45,7 @@ LJ::location loc;
 <INITIAL>"true"         return LJ::LJ_Parser::make_TRUE(loc);
 <INITIAL>"false"        return LJ::LJ_Parser::make_FALSE(loc);
 <INITIAL>"global"       return LJ::LJ_Parser::make_GLOBAL(loc);
+<INITIAL>"function"     return LJ::LJ_Parser::make_FUNCTION(loc);
 <INITIAL>"("            return LJ::LJ_Parser::make_LP(loc);
 <INITIAL>")"            return LJ::LJ_Parser::make_RP(loc);
 <INITIAL>"{"            return LJ::LJ_Parser::make_LC(loc);

@@ -4,6 +4,7 @@
 #include <list>
 #include <set>
 #include <string>
+#include <iostream>
 #include "location.hh"
 
 #define MAKE_VALUE_EXP(t, u, v, l)		new ValueExpression<t, u>(v, l)
@@ -70,14 +71,25 @@ namespace LJ {
 		NULL_EXPRESSION,
 	};
 
+	char *GetExpressionTypeString(int type);
+
 	class Expression {
 	public:
 		Expression(location &l) : loc_(l){}
 		virtual ~Expression() {}
 
 		virtual ExpressionType GetType() const = 0;
+		virtual void Dump(int indent) const = 0;
+
 		location& GetLocation() { return loc_; }
 		void SetLocation(location &val) { loc_ = val; }
+
+		void PrintIndent(int indent) const
+		{
+			for (int i = 0; i < indent; i++) {
+				std::cout << "  ";
+			}
+		}
 
 	private:
 		location loc_;
@@ -92,6 +104,12 @@ namespace LJ {
 		ExpressionType GetType() const override {
 			return T;
 		}
+
+		void Dump(int indent) const override {
+			PrintIndent(indent);
+			std::cout << GetExpressionTypeString(GetType()) << " = [" << value_ << "]" << std::endl;
+		}
+
 	private:
 		U value_;
 	};
@@ -106,6 +124,11 @@ namespace LJ {
 		ExpressionType GetType() const override {
 			return T;
 		}
+
+		void Dump(int indent) const override {
+			PrintIndent(indent);
+			std::cout << GetExpressionTypeString(GetType()) << std::endl;
+		}
 	};
 
 	template<ExpressionType T>
@@ -116,6 +139,12 @@ namespace LJ {
 
 		ExpressionType GetType() const override {
 			return T;
+		}
+
+		void Dump(int indent) const override {
+			PrintIndent(indent++);
+			std::cout << GetExpressionTypeString(GetType()) << std::endl;
+			e0_->Dump(indent);
 		}
 
 	private:
@@ -144,6 +173,13 @@ namespace LJ {
 			return T;
 		}
 
+		void Dump(int indent) const override {
+			PrintIndent(indent++);
+			std::cout << GetExpressionTypeString(GetType()) << std::endl;
+			e0_->Dump(indent);
+			e1_->Dump(indent);
+		}
+
 	private:
 		Expression *e0_;
 		Expression *e1_;
@@ -164,6 +200,14 @@ namespace LJ {
 			return FUNCTION_CALL_EXPRESSION;
 		}
 
+		void Dump(int indent) const override {
+			PrintIndent(indent++);
+			std::cout << GetExpressionTypeString(GetType()) << " = [" << n0_ << "]" << std::endl;
+			for (ArgumentList::iterator it = a1_->begin(); it != a1_->end(); ++it) {
+				(*it)->Dump(indent);
+			}
+		}
+
 	private:
 		std::string n0_;
 		ArgumentList *a1_;
@@ -178,6 +222,12 @@ namespace LJ {
 
 		ExpressionType GetType() const override {
 			return ASSIGN_EXPRESSION;
+		}
+
+		void Dump(int indent) const override {
+			PrintIndent(indent++);
+			std::cout << GetExpressionTypeString(GetType()) << " = [" << n0_ << "]" << std::endl;
+			e1_->Dump(indent);
 		}
 
 	private:

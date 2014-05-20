@@ -4,8 +4,7 @@
 LJ_Driver::LJ_Driver()
 	: trace_scanning_(false), trace_parsing_(false), statement_list_(NULL)
 {
-	variables["one"] = 1;
-	variables["two"] = 2;
+
 }
 
 LJ_Driver::~LJ_Driver()

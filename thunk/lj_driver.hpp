@@ -17,8 +17,6 @@ public:
 	LJ_Driver();
 	virtual ~LJ_Driver();
 
-	std::map<std::string, __int64> variables;
-
 	__int64 result_;
 
 	// Handling the scanner.
