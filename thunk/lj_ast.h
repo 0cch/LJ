@@ -7,7 +7,7 @@
 #include "location.hh"
 
 #define MAKE_VALUE_EXP(t, u, v, l)		new ValueExpression<t, u>(v, l)
-#define MAKE_EXP(t, l)						new NullExpression<t>(l)
+#define MAKE_EXP(t, l)					new NullExpression<t>(l)
 #define MAKE_UNARY_EXP(t, e, l)			new UnaryExpression<t>(e, l)
 #define MAKE_BIN_EXP(t, e0, e1, l)		new BinaryExpression<t>(e0, e1, l)
 
@@ -80,7 +80,7 @@ namespace LJ {
 		void SetLocation(location &val) { loc_ = val; }
 
 	private:
-		location &loc_;
+		location loc_;
 	};
 
 	template<ExpressionType T, class U>
@@ -112,7 +112,7 @@ namespace LJ {
 	class UnaryExpression : public Expression {
 	public:
 		UnaryExpression(Expression *e0, location &l) : Expression(l), e0_(e0) {}
-		~UnaryExpression() {}
+		~UnaryExpression() { delete e0_; }
 
 		ExpressionType GetType() const override {
 			return T;
@@ -122,12 +122,23 @@ namespace LJ {
 		Expression *e0_;
 	};
 
+	template<class T>
+	void DeleteElems(T &e)
+	{
+		for (T::iterator it = e.begin(); it != e.end(); ++it) {
+			delete *it;
+		}
+	}
+
 	template<ExpressionType T>
 	class BinaryExpression : public Expression {
 	public:
 	public:
 		BinaryExpression(Expression *e0, Expression *e1, location &l) : Expression(l), e0_(e0), e1_(e1) {}
-		~BinaryExpression() {}
+		~BinaryExpression() {
+			delete e0_;
+			delete e1_;
+		}
 
 		ExpressionType GetType() const override {
 			return T;
@@ -144,7 +155,10 @@ namespace LJ {
 	public:
 	public:
 		BinaryExpression(const std::string &n0, ArgumentList *a1, location &l) : Expression(l), n0_(n0), a1_(a1) {}
-		~BinaryExpression() {}
+		~BinaryExpression() {
+			DeleteElems(*a1_);
+			delete a1_;
+		}
 
 		ExpressionType GetType() const override {
 			return FUNCTION_CALL_EXPRESSION;
@@ -160,7 +174,7 @@ namespace LJ {
 	public:
 	public:
 		BinaryExpression(const std::string &n0, Expression *e1, location &l) : Expression(l), n0_(n0), e1_(e1) {}
-		~BinaryExpression() {}
+		~BinaryExpression() { delete e1_; }
 
 		ExpressionType GetType() const override {
 			return ASSIGN_EXPRESSION;
@@ -192,7 +206,7 @@ namespace LJ {
 		void SetLocation(location &val) { loc_ = val; }
 
 	private:
-		location &loc_;
+		location loc_;
 	};
 
 	typedef std::list<Statement *> StatementList;
@@ -201,7 +215,10 @@ namespace LJ {
 	class Block {
 	public:
 		Block(StatementList *s) : statement_list_(s){}
-		~Block() {}
+		~Block() {
+			DeleteElems(*statement_list_);
+			delete statement_list_;
+		}
 		StatementList& GetStatementList() { return *statement_list_; }
 
 	private:
@@ -212,7 +229,9 @@ namespace LJ {
 	class Elseif {
 	public:
 		Elseif(Expression *e, Block *b) : e_(e), b_(b){}
-		~Elseif() {}
+		~Elseif() {
+			delete b_;
+		}
 
 	private:
 		Expression *e_;
@@ -224,7 +243,9 @@ namespace LJ {
 	class ExpressionStatement : public Statement {
 	public:
 		ExpressionStatement(Expression *e, location &l) : Statement(l), e_(e) {}
-		~ExpressionStatement() {}
+		~ExpressionStatement() {
+			delete e_;
+		}
 
 		StatementType GetType() const override {
 			return EXPRESSION_STATEMENT;
@@ -237,7 +258,9 @@ namespace LJ {
 	class ReturnStatement : public Statement {
 	public:
 		ReturnStatement(Expression *e, location &l) : Statement(l), e_(e) {}
-		~ReturnStatement() {}
+		~ReturnStatement() {
+			delete e_;
+		}
 
 		StatementType GetType() const override {
 			return RETURN_STATEMENT;
@@ -250,7 +273,9 @@ namespace LJ {
 	class GlobalStatement : public Statement {
 	public:
 		GlobalStatement(IdentifierList *id_list, location &l) : Statement(l), identifier_list_(id_list) {}
-		~GlobalStatement() {}
+		~GlobalStatement() {
+			delete identifier_list_;
+		}
 
 		StatementType GetType() const override {
 			return GLOBAL_STATEMENT;
@@ -266,7 +291,13 @@ namespace LJ {
 	public:
 		IfStatement(Expression *e, Block *then_b, ElseifList *elseif_list, Block *else_b, location &l) :
 			Statement(l), e_(e), then_b_(then_b), elseif_list_(elseif_list), else_b_(else_b) {}
-		~IfStatement() {}
+		~IfStatement() {
+			delete e_;
+			delete then_b_;
+			DeleteElems(*elseif_list_);
+			delete elseif_list_;
+			delete else_b_;
+		}
 
 		StatementType GetType() const override {
 			return IF_STATEMENT;
@@ -283,7 +314,10 @@ namespace LJ {
 	public:
 		WhileStatement(Expression *e, Block *b, location &l) :
 			Statement(l), e_(e), b_(b) {}
-		~WhileStatement() {}
+		~WhileStatement() {
+			delete e_;
+			delete b_;
+		}
 
 		StatementType GetType() const override {
 			return WHILE_STATEMENT;
@@ -298,7 +332,12 @@ namespace LJ {
 	public:
 		ForStatement(Expression *init_e, Expression *condition_e, Expression *post_e, Block *b, location &l) :
 			Statement(l), init_e_(init_e), condition_e_(condition_e), post_e_(post_e), b_(b) {}
-		~ForStatement() {}
+		~ForStatement() {
+			delete init_e_;
+			delete condition_e_;
+			delete post_e_;
+			delete b_;
+		}
 
 		StatementType GetType() const override {
 			return FOR_STATEMENT;
@@ -328,7 +367,10 @@ namespace LJ {
 	public:
 		FunctionDefiniton(const std::string &name, ParameterList *p, Block *b, location l) :
 			name_(name), p_(p), b_(b), loc_(l) {}
-		~FunctionDefiniton() {}
+		~FunctionDefiniton() {
+			delete p_;
+			delete b_;
+		}
 		location& GetLocation() { return loc_; }
 		void SetLocation(location &val) { loc_ = val; }
 	private:
