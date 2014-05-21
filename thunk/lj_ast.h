@@ -246,14 +246,24 @@ namespace LJ {
 		CONTINUE_STATEMENT,
 	};
 
+	char *GetStatementTypeString(int type);
+
 	class Statement {
 	public:
 		Statement(location &l) : loc_(l) {}
 		virtual ~Statement() {}
 
 		virtual StatementType GetType() const = 0;
+		virtual void Dump(int indent) const = 0;
 		location& GetLocation() { return loc_; }
 		void SetLocation(location &val) { loc_ = val; }
+
+		void PrintIndent(int indent) const
+		{
+			for (int i = 0; i < indent; i++) {
+				std::cout << "  ";
+			}
+		}
 
 	private:
 		location loc_;
@@ -271,6 +281,14 @@ namespace LJ {
 		}
 		StatementList& GetStatementList() { return *statement_list_; }
 
+		void Dump(int indent) const {
+			std::cout << "BLOCK" << std::endl;
+			for (StatementList::iterator it = statement_list_->begin();
+				it != statement_list_->end(); ++it) {
+				(*it)->Dump(indent);
+			}
+		}
+
 	private:
 		StatementList *statement_list_;
 
@@ -281,6 +299,12 @@ namespace LJ {
 		Elseif(Expression *e, Block *b) : e_(e), b_(b){}
 		~Elseif() {
 			delete b_;
+		}
+
+		void Dump(int indent) const {
+			std::cout << "ELSEIF" << std::endl;
+			e_->Dump(indent);
+			b_->Dump(indent);
 		}
 
 	private:
@@ -301,6 +325,12 @@ namespace LJ {
 			return EXPRESSION_STATEMENT;
 		}
 
+		void Dump(int indent) const override {
+			PrintIndent(indent++);
+			std::cout << GetStatementTypeString(GetType()) << std::endl;
+			e_->Dump(indent);
+		}
+
 	private:
 		Expression *e_;
 	};
@@ -314,6 +344,12 @@ namespace LJ {
 
 		StatementType GetType() const override {
 			return RETURN_STATEMENT;
+		}
+
+		void Dump(int indent) const override {
+			PrintIndent(indent++);
+			std::cout << GetStatementTypeString(GetType()) << std::endl;
+			e_->Dump(indent);
 		}
 
 	private:
@@ -333,6 +369,18 @@ namespace LJ {
 
 		IdentifierList& GetIdentifierList() { return *identifier_list_; }
 
+		void Dump(int indent) const override {
+			PrintIndent(indent++);
+			std::cout << GetStatementTypeString(GetType()) << std::endl;
+			PrintIndent(indent++);
+			std::cout << "[";
+			for (IdentifierList::iterator it = identifier_list_->begin();
+				it != identifier_list_->end(); ++it) {
+				std::cout << *it << ", ";
+			}
+			std::cout << "]";
+		}
+
 	private:
 		IdentifierList *identifier_list_;
 	};
@@ -351,6 +399,30 @@ namespace LJ {
 
 		StatementType GetType() const override {
 			return IF_STATEMENT;
+		}
+
+		void Dump(int indent) const override {
+			PrintIndent(indent++);
+			std::cout << GetStatementTypeString(GetType()) << std::endl;
+			e_->Dump(indent);		
+			if (then_b_ != NULL) {
+				PrintIndent(indent);
+				then_b_->Dump(indent);
+			}
+
+			if (elseif_list_ != NULL) {
+				for (ElseifList::iterator it = elseif_list_->begin();
+					it != elseif_list_->end(); ++it) {
+					PrintIndent(indent);
+					(*it)->Dump(indent);
+				}
+			}
+
+			if (else_b_ != NULL) {
+				PrintIndent(indent);
+				else_b_->Dump(indent);
+			}
+			
 		}
 
 	private:
@@ -373,6 +445,16 @@ namespace LJ {
 			return WHILE_STATEMENT;
 		}
 
+		void Dump(int indent) const override {
+			PrintIndent(indent++);
+			std::cout << GetStatementTypeString(GetType()) << std::endl;
+			e_->Dump(indent);
+			if (b_ != NULL) {
+				PrintIndent(indent);
+				b_->Dump(indent);
+			}
+		}
+
 	private:
 		Expression *e_;
 		Block *b_;
@@ -393,6 +475,27 @@ namespace LJ {
 			return FOR_STATEMENT;
 		}
 
+		void Dump(int indent) const override {
+			PrintIndent(indent++);
+			std::cout << GetStatementTypeString(GetType()) << std::endl;
+			if (init_e_ != NULL) {
+				init_e_->Dump(indent);
+			}
+
+			if (condition_e_ != NULL) {
+				condition_e_->Dump(indent);
+			}
+
+			if (post_e_ != NULL) {
+				post_e_->Dump(indent);
+			}
+
+			if (b_ != NULL) {
+				PrintIndent(indent);
+				b_->Dump(indent);
+			}
+		}
+
 	private:
 		Expression *init_e_;
 		Expression *condition_e_;
@@ -408,6 +511,11 @@ namespace LJ {
 
 		StatementType GetType() const override {
 			return T;
+		}
+
+		void Dump(int indent) const override {
+			PrintIndent(indent);
+			std::cout << GetStatementTypeString(GetType()) << std::endl;
 		}
 	};
 

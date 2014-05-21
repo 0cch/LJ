@@ -32,4 +32,20 @@ namespace LJ {
 
 		return "EXPRESSION_ERROR";
 	}
+
+	char *GetStatementTypeString(int type)
+	{
+		switch (type) {
+		case EXPRESSION_STATEMENT: return "EXPRESSION_STATEMENT";
+		case GLOBAL_STATEMENT: return "GLOBAL_STATEMENT";
+		case IF_STATEMENT: return "IF_STATEMENT";
+		case WHILE_STATEMENT: return "WHILE_STATEMENT";
+		case FOR_STATEMENT: return "FOR_STATEMENT";
+		case RETURN_STATEMENT: return "RETURN_STATEMENT";
+		case BREAK_STATEMENT: return "BREAK_STATEMENT";
+		case CONTINUE_STATEMENT: return "CONTINUE_STATEMENT";
+		}
+
+		return "STATEMENT_ERROR";
+	}
 }
