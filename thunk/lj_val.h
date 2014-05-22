@@ -20,7 +20,7 @@ namespace LJ {
 		virtual ValueType GetType() const = 0;
 	};
 
-	template<class T, ValueBase N>
+	template<class T, ValueType N>
 	class Value : ValueBase {
 	public:
 		Value() {}
@@ -33,7 +33,7 @@ namespace LJ {
 		T value_;
 	};
 
-	template<ValueBase N>
+	template<ValueType N>
 	class Value<NullType, N> : ValueBase {
 	public:
 		Value() {}

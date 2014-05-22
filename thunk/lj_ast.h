@@ -134,6 +134,10 @@ namespace LJ {
 			PrintIndent(indent);
 			std::cout << GetExpressionTypeString(GetType()) << std::endl;
 		}
+
+		void* GetValue(int index) override {
+			return NULL;
+		}
 	};
 
 	template<ExpressionType T>
@@ -150,6 +154,10 @@ namespace LJ {
 			PrintIndent(indent++);
 			std::cout << GetExpressionTypeString(GetType()) << std::endl;
 			e0_->Dump(indent);
+		}
+
+		void* GetValue(int index) override {
+			return e0_;
 		}
 
 	private:
@@ -185,6 +193,15 @@ namespace LJ {
 			e1_->Dump(indent);
 		}
 
+		void* GetValue(int index) override {
+			if (index == 0) {
+				return e0_;
+			}
+			else {
+				return e1_;
+			}
+		}
+
 	private:
 		Expression *e0_;
 		Expression *e1_;
@@ -213,6 +230,15 @@ namespace LJ {
 			}
 		}
 
+		void* GetValue(int index) override {
+			if (index == 0) {
+				return &n0_;
+			}
+			else {
+				return a1_;
+			}
+		}
+
 	private:
 		std::string n0_;
 		ArgumentList *a1_;
@@ -233,6 +259,15 @@ namespace LJ {
 			PrintIndent(indent++);
 			std::cout << GetExpressionTypeString(GetType()) << " = [" << n0_ << "]" << std::endl;
 			e1_->Dump(indent);
+		}
+
+		void* GetValue(int index) override {
+			if (index == 0) {
+				return &n0_;
+			}
+			else {
+				return e1_;
+			}
 		}
 
 	private:

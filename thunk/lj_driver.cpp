@@ -38,45 +38,54 @@ void LJ_Driver::AddFunction(LJ::FunctionDefiniton *f)
 	function_list_.push_back(f);
 }
 
+
+
+void LJ_Driver::Dump()
+{
+	for (auto &i : *statement_list_) {
+		i->Dump(0);
+	}
+}
+
 void LJ_Driver::EvalBooleanExpression(boolean boolean_value)
 {
-	LJ::Value<boolean, BOOLEAN_VALUE> *v = new LJ::Value<boolean, BOOLEAN_VALUE>;
-	v.value_ = boolean_value;
-	value_stack_.push(v);
+	LJ::Value<boolean, LJ::BOOLEAN_VALUE> *v = new LJ::Value<boolean, LJ::BOOLEAN_VALUE>;
+	v->value_ = boolean_value;
+	value_stack_.push((LJ::ValueBase *)v);
 }
 
 void LJ_Driver::EvalIntExpression(__int64 int_value)
 {
-	LJ::Value<__int64, INT_VALUE> *v = new LJ::Value<__int64, INT_VALUE>;
-	v.value_ = int_value;
-	value_stack_.push(v);
+	LJ::Value<__int64, LJ::INT_VALUE> *v = new LJ::Value<__int64, LJ::INT_VALUE>;
+	v->value_ = int_value;
+	value_stack_.push((LJ::ValueBase *)v);
 }
 
 void LJ_Driver::EvalDoubleExpression(double double_value)
 {
-	LJ::Value<double, DOUBLE_VALUE> *v = new LJ::Value<double, DOUBLE_VALUE>;
-	v.value_ = double_value;
-	value_stack_.push(v);
+	LJ::Value<double, LJ::DOUBLE_VALUE> *v = new LJ::Value<double, LJ::DOUBLE_VALUE>;
+	v->value_ = double_value;
+	value_stack_.push((LJ::ValueBase *)v);
 }
 
 void LJ_Driver::EvalStringExpression(char *string_value)
 {
-	LJ::Value<std::string, STRING_VALUE> *v = new LJ::Value<std::string, STRING_VALUE>;
-	v.value_ = string_value;
-	value_stack_.push(v);
+	LJ::Value<std::string, LJ::STRING_VALUE> *v = new LJ::Value<std::string, LJ::STRING_VALUE>;
+	v->value_ = string_value;
+	value_stack_.push((LJ::ValueBase *)v);
 }
 
 void LJ_Driver::EvalNullExpression()
 {
-	LJ::Value<NullType, NULL_VALUE> *v = new LJ::Value<NullType, NULL_VALUE>;
-	value_stack_.push(v);
+	LJ::Value<LJ::NullType, LJ::NULL_VALUE> *v = new LJ::Value<LJ::NullType, LJ::NULL_VALUE>;
+	value_stack_.push((LJ::ValueBase *)v);
 }
 
-void LJ_Driver::EvalIdentifierExpression(Expression *expr)
+void LJ_Driver::EvalIdentifierExpression(LJ::Expression *expr)
 {
-	ValueBase *v;
+	LJ::ValueBase *v;
 
-	std::map<std::string, ValueBase *>::iterator it;
+	std::map<std::string, LJ::ValueBase *>::iterator it;
 	it = local_value_stack_.top().find(*((std::string *)expr->GetValue(0)));
 	if (it != local_value_stack_.top().end()) {
 		v = it->second;

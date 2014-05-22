@@ -175,28 +175,28 @@ statement_list
         }
         ;
 expression
-        : logical_or_expression
+        : logical_or_expression {$$ = $1;}
         | IDENTIFIER ASSIGN expression
         {
             $$ = MAKE_BIN_EXP(ASSIGN_EXPRESSION, $1, $3, loc);
         }
         ;
 logical_or_expression
-        : logical_and_expression
+        : logical_and_expression {$$ = $1;}
         | logical_or_expression LOGICAL_OR logical_and_expression
         {
             $$ = MAKE_BIN_EXP(LOGICAL_OR_EXPRESSION, $1, $3, loc);
         }
         ;
 logical_and_expression
-        : equality_expression
+        : equality_expression {$$ = $1;}
         | logical_and_expression LOGICAL_AND equality_expression
         {
             $$ = MAKE_BIN_EXP(LOGICAL_AND_EXPRESSION, $1, $3, loc);
         }
         ;
 equality_expression
-        : relational_expression
+        : relational_expression {$$ = $1;}
         | equality_expression EQ relational_expression
         {
             $$ = MAKE_BIN_EXP(EQ_EXPRESSION, $1, $3, loc);
@@ -207,7 +207,7 @@ equality_expression
         }
         ;
 relational_expression
-        : additive_expression
+        : additive_expression {$$ = $1;}
         | relational_expression GT additive_expression
         {
             $$ = MAKE_BIN_EXP(GT_EXPRESSION, $1, $3, loc);
@@ -226,7 +226,7 @@ relational_expression
         }
         ;
 additive_expression
-        : multiplicative_expression
+        : multiplicative_expression {$$ = $1;}
         | additive_expression ADD multiplicative_expression
         {
             $$ = MAKE_BIN_EXP(ADD_EXPRESSION, $1, $3, loc);
@@ -237,7 +237,7 @@ additive_expression
         }
         ;
 multiplicative_expression
-        : unary_expression
+        : unary_expression {$$ = $1;}
         | multiplicative_expression MUL unary_expression
         {
             $$ = MAKE_BIN_EXP(MUL_EXPRESSION, $1, $3, loc);
@@ -252,7 +252,7 @@ multiplicative_expression
         }
         ;
 unary_expression
-        : primary_expression
+        : primary_expression {$$ = $1;}
 		| EXCLAMATION unary_expression
 		{
 			$$ = MAKE_UNARY_EXP(EXCLAMATION_EXPRESSION, $2, loc);
@@ -386,7 +386,7 @@ expression_opt
         {
             $$ = NULL;
         }
-        | expression
+        | expression {$$ = $1;}
         ;
 return_statement
         : RETURN expression_opt SEMICOLON
@@ -420,7 +420,7 @@ block
 
 
 void
-LJ::LJ_Parser::error(const location_type& l, const std::string& m)
+LJ::Parser::error(const location_type& l, const std::string& m)
 {
 	driver.Error(l, m);
 }

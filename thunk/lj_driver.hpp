@@ -4,12 +4,14 @@
 #include <map>
 #include <stack>
 
+typedef unsigned char boolean;
+
 #include "lj_parser.hpp"
 #include "lj_ast.h"
 #include "lj_val.h"
 
 // Tell Flex the lexer's prototype ...
-# define YY_DECL LJ::LJ_Parser::symbol_type yylex(LJ_Driver& driver)
+# define YY_DECL LJ::Parser::symbol_type yylex(LJ_Driver& driver)
 // ... and declare it for the parser's sake.
 YY_DECL;
 
@@ -30,6 +32,8 @@ public:
 	void Error(const LJ::location& l, const std::string& m);
 	void Error(const std::string& m);
 
+	void Dump();
+
 	void AddFunction(LJ::FunctionDefiniton *f);
 
 	void EvalBooleanExpression(boolean boolean_value);
@@ -37,14 +41,14 @@ public:
 	void EvalDoubleExpression(double double_value);
 	void EvalStringExpression(char *string_value);
 	void EvalNullExpression();
-	void EvalIdentifierExpression(Expression *expr);
+	void EvalIdentifierExpression(LJ::Expression *expr);
 	LJ::StatementList *statement_list_;
 
-	std::stack<ValueBase *> value_stack_;
+	std::stack<LJ::ValueBase *> value_stack_;
 
-	std::map<std::string, ValueBase *> global_value_;
+	std::map<std::string, LJ::ValueBase *> global_value_;
 
-	std::stack<std::map<std::string, ValueBase *>> local_value_stack_;
+	std::stack<std::map<std::string, LJ::ValueBase *>> local_value_stack_;
 
 private:
 	std::list<LJ::FunctionDefiniton *> function_list_;
