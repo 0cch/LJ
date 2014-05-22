@@ -2,9 +2,11 @@
 #define __LJ_DRIVER_H__
 #include <string>
 #include <map>
+#include <stack>
 
 #include "lj_parser.hpp"
 #include "lj_ast.h"
+#include "lj_val.h"
 
 // Tell Flex the lexer's prototype ...
 # define YY_DECL LJ::LJ_Parser::symbol_type yylex(LJ_Driver& driver)
@@ -17,30 +19,35 @@ public:
 	LJ_Driver();
 	virtual ~LJ_Driver();
 
-	__int64 result_;
-
-	// Handling the scanner.
 	void ScanBegin();
 	void ScanEnd();
 	bool trace_scanning_;
 
-	// Run the parser on file F.
-	// Return 0 on success.
 	int Parse(const std::string& f);
-	// The name of the file being parsed.
-	// Used later to pass the file name to the location tracker.
 	std::string file_;
-	// Whether parser traces should be generated.
 	bool trace_parsing_;
 
-	// Error handling.
 	void Error(const LJ::location& l, const std::string& m);
 	void Error(const std::string& m);
 
 	void AddFunction(LJ::FunctionDefiniton *f);
+
+	void EvalBooleanExpression(boolean boolean_value);
+	void EvalIntExpression(__int64 int_value);
+	void EvalDoubleExpression(double double_value);
+	void EvalStringExpression(char *string_value);
+	void EvalNullExpression();
+	void EvalIdentifierExpression(Expression *expr);
 	LJ::StatementList *statement_list_;
+
+	std::stack<ValueBase *> value_stack_;
+
+	std::map<std::string, ValueBase *> global_value_;
+
+	std::stack<std::map<std::string, ValueBase *>> local_value_stack_;
+
 private:
 	std::list<LJ::FunctionDefiniton *> function_list_;
 	
 };
-#endif // ! LJ_Driver_HH
+#endif

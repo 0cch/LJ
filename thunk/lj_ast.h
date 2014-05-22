@@ -80,6 +80,7 @@ namespace LJ {
 
 		virtual ExpressionType GetType() const = 0;
 		virtual void Dump(int indent) const = 0;
+		virtual void* GetValue(int index) = 0;
 
 		location& GetLocation() { return loc_; }
 		void SetLocation(location &val) { loc_ = val; }
@@ -108,6 +109,10 @@ namespace LJ {
 		void Dump(int indent) const override {
 			PrintIndent(indent);
 			std::cout << GetExpressionTypeString(GetType()) << " = [" << value_ << "]" << std::endl;
+		}
+
+		void* GetValue(int index) override {
+			return &value_;
 		}
 
 	private:

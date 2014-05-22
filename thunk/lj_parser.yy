@@ -2,7 +2,7 @@
 %require "3.0"
 %defines
 %define api.namespace {LJ}
-%define parser_class_name {LJ_Parser}
+%define parser_class_name {Parser}
 %define api.value.type variant
 %define parse.assert
 %define api.token.constructor

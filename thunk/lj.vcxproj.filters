@@ -38,6 +38,9 @@
     <ClInclude Include="lj_ast.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="lj_val.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="lj_parser.yy">

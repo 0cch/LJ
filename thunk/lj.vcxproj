@@ -84,6 +84,7 @@
   <ItemGroup>
     <ClInclude Include="lj_ast.h" />
     <ClInclude Include="lj_driver.hpp" />
+    <ClInclude Include="lj_val.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="lj_parser.yy" />
