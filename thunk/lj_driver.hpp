@@ -11,7 +11,7 @@ typedef unsigned char boolean;
 #include "lj_val.h"
 
 // Tell Flex the lexer's prototype ...
-# define YY_DECL Parser::symbol_type yylex(LJ_Driver& driver)
+# define YY_DECL LJ::Parser::symbol_type yylex(LJ::LJ_Driver& driver)
 // ... and declare it for the parser's sake.
 YY_DECL;
 
@@ -40,7 +40,7 @@ namespace LJ {
 		void EvalBooleanExpression(boolean boolean_value);
 		void EvalIntExpression(__int64 int_value);
 		void EvalDoubleExpression(double double_value);
-		void EvalStringExpression(char *string_value);
+		void EvalStringExpression(const std::string &string_value);
 		void EvalNullExpression();
 		void EvalIdentifierExpression(Expression *expr);
 		ValueBase ** GetIdentifierLValue(const std::string &identifier, bool is_global_value);

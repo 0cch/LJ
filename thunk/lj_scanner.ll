@@ -103,12 +103,14 @@ LJ::location loc;
     return LJ::Parser::make_DOUBLE_LITERAL(n, loc);
 }
 
-<INITIAL>[A-Za-z_][A-Za-z_0-9]*      return LJ::Parser::make_IDENTIFIER(yytext, loc);
+<INITIAL>[A-Za-z_][A-Za-z_0-9]*      {
+	return LJ::Parser::make_IDENTIFIER(yytext, loc);
+}
 .          driver.Error(loc, "invalid character");
 <<EOF>>    return LJ::Parser::make_END(loc);
 %%
 
-void LJ_Driver::ScanBegin()
+void LJ::LJ_Driver::ScanBegin()
 {
 	yy_flex_debug = trace_scanning_;
 	if (file_ == "-")
@@ -120,7 +122,7 @@ void LJ_Driver::ScanBegin()
 	}
 }
 
-void LJ_Driver::ScanEnd()
+void LJ::LJ_Driver::ScanEnd()
 {
 	fclose(yyin);
 }

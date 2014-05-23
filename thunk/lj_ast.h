@@ -20,7 +20,7 @@
 #define MAKE_FOR_STAT(i, e, p, b, l)	new ForStatement(i, e, p, b, l)
 #define MAKE_SIMPLE_STAT(t, l)			new SimpleStatement<t>(l)
 
-#define MAKE_FUNCTION_DEF(n, p, b, l)	FunctionDefiniton *f = new FunctionDefiniton(n, p, b, l); driver.AddFunction(f)
+#define MAKE_FUNCTION_DEF(n, p, b, l)	FunctionDefinition *f = new FunctionDefinition(n, p, b, l); driver.AddFunction(f)
 
 #define MAKE_IDENTIFIER_LIST(r, n)		r = new IdentifierList; r->push_back(n)
 #define ADD_IDENTIFIER_LIST(r, o, n)	o->push_back(n); r = o;

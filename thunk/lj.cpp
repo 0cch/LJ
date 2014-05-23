@@ -4,7 +4,7 @@
 int main(int argc, char *argv[])
 {
 	int res = 0;
-	LJ_Driver driver;
+	LJ::LJ_Driver driver;
 	for (++argv; argv[0]; ++argv) {
 		if (*argv == std::string("-p"))
 			driver.trace_parsing_ = true;

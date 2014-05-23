@@ -73,7 +73,7 @@ namespace LJ {
 		value_stack_.push((ValueBase *)v);
 	}
 
-	void LJ_Driver::EvalStringExpression(char *string_value)
+	void LJ_Driver::EvalStringExpression(const std::string &string_value)
 	{
 		Value<std::string, STRING_VALUE> *v = new Value<std::string, STRING_VALUE>;
 		v->value_ = string_value;
@@ -136,7 +136,7 @@ namespace LJ {
 	ValueBase ** LJ_Driver::GetLValue(Expression *expr)
 	{
 		if (expr->GetType() == IDENTIFIER_EXPRESSION) {
-			return GetIdentifierLValue(*((std::string *)expr->GetValue(0)));
+			return GetIdentifierLValue(*((std::string *)expr->GetValue(0)), false);
 		}
 		else {
 			Error(expr->GetLocation(), "GetLValue error");
@@ -179,10 +179,10 @@ namespace LJ {
 		Value<__int64, INT_VALUE> *int_value = NULL;
 		Value<boolean, BOOLEAN_VALUE> *boolean_value = NULL;
 
-		if (IsMathop(op)) {
+		if (IsMathOperator(op)) {
 			int_value = new Value<__int64, INT_VALUE>;
 			v = int_value;
-		} else if (IsCompareop(op)) {
+		} else if (IsCompareOperator(op)) {
 			boolean_value = new Value<boolean, BOOLEAN_VALUE>;
 			v = boolean_value;
 		} else {
@@ -252,10 +252,10 @@ namespace LJ {
 		Value<double, DOUBLE_VALUE> *double_value = NULL;
 		Value<boolean, BOOLEAN_VALUE> *boolean_value = NULL;
 
-		if (IsMathop(op)) {
+		if (IsMathOperator(op)) {
 			double_value = new Value<double, DOUBLE_VALUE>;
 			v = double_value;
-		} else if (IsCompareop(op)) {
+		} else if (IsCompareOperator(op)) {
 			boolean_value = new Value<boolean, BOOLEAN_VALUE>;
 			v = boolean_value;
 		} else {
@@ -375,35 +375,36 @@ namespace LJ {
 		EvalExpression(right);
 
 		right_val = value_stack_.top();
-		left_val = *(value_stack_.end() - 2);
+		left_val = *(value_stack_._Get_container().end() - 2);
 
 		if (left_val->GetType() == INT_VALUE && right_val->GetType() == INT_VALUE) {
-			result = EvalBinaryInt(op, dynamic_cast<Value<__int64, INT_VALUE> *>(left_val).value_, 
-				dynamic_cast<Value<__int64, INT_VALUE> *>(right_val).value_, left->GetLocation());
+			result = EvalBinaryInt(op, dynamic_cast<Value<__int64, INT_VALUE> *>(left_val)->value_, 
+				dynamic_cast<Value<__int64, INT_VALUE> *>(right_val)->value_, left->GetLocation());
 		} 
 		else if (left_val->GetType() == DOUBLE_VALUE && right_val->GetType() == DOUBLE_VALUE) {
-			result = EvalBinaryDouble(op, dynamic_cast<Value<double, DOUBLE_VALUE> *>(left_val).value_, 
-				dynamic_cast<Value<double, DOUBLE_VALUE> *>(right_val).value_, left->GetLocation());
+			result = EvalBinaryDouble(op, dynamic_cast<Value<double, DOUBLE_VALUE> *>(left_val)->value_,
+				dynamic_cast<Value<double, DOUBLE_VALUE> *>(right_val)->value_, left->GetLocation());
 		} 
 		else if (left_val->GetType() == INT_VALUE && right_val->GetType() == DOUBLE_VALUE) {
-			result = EvalBinaryDouble(op, (double)dynamic_cast<Value<__int64, INT_VALUE> *>(left_val).value_, 
-				dynamic_cast<Value<double, DOUBLE_VALUE> *>(right_val).value_, left->GetLocation());
+			result = EvalBinaryDouble(op, (double)dynamic_cast<Value<__int64, INT_VALUE> *>(left_val)->value_,
+				dynamic_cast<Value<double, DOUBLE_VALUE> *>(right_val)->value_, left->GetLocation());
 		} 
 		else if (left_val->GetType() == DOUBLE_VALUE && right_val->GetType() == INT_VALUE) {
-			result = EvalBinaryDouble(op, dynamic_cast<Value<double, DOUBLE_VALUE> *>(left_val).value_, 
-				(double)dynamic_cast<Value<__int64, INT_VALUE> *>(right_val).value_, left->GetLocation());
+			result = EvalBinaryDouble(op, dynamic_cast<Value<double, DOUBLE_VALUE> *>(left_val)->value_,
+				(double)dynamic_cast<Value<__int64, INT_VALUE> *>(right_val)->value_, left->GetLocation());
 		} 
 		else if (left_val->GetType() == BOOLEAN_VALUE && right_val->GetType() == BOOLEAN_VALUE) {
 
-			result = EvalBinaryBoolean(op, dynamic_cast<Value<boolean, BOOLEAN_VALUE> *>(left_val).value_, 
-				dynamic_cast<Value<boolean, BOOLEAN_VALUE> *>(right_val).value_, left->GetLocation());
+			result = EvalBinaryBoolean(op, dynamic_cast<Value<boolean, BOOLEAN_VALUE> *>(left_val)->value_,
+				dynamic_cast<Value<boolean, BOOLEAN_VALUE> *>(right_val)->value_, left->GetLocation());
 		} 
 		else if (left_val->GetType() == STRING_VALUE && op == ADD_EXPRESSION) {
-			result = ChainString(dynamic_cast<Value<std::string, STRING_VALUE> *>(left_val).value_, 
-				dynamic_cast<Value<std::string, STRING_VALUE> *>(right_val).value_);
+			result = ChainString(dynamic_cast<Value<std::string, STRING_VALUE> *>(left_val)->value_,
+				dynamic_cast<Value<std::string, STRING_VALUE> *>(right_val)->value_);
 		} 
 		else if (left_val->GetType() == STRING_VALUE && right_val->GetType() == STRING_VALUE) {
-			result = EvalCompareString(op, left_val, right_val, left->GetLocation());
+			result = EvalCompareString(op, dynamic_cast<Value<std::string, STRING_VALUE> *>(left_val)->value_, 
+				dynamic_cast<Value<std::string, STRING_VALUE> *>(right_val)->value_, left->GetLocation());
 		} 
 		else if (left_val->GetType() == NULL_VALUE || right_val->GetType() == NULL_VALUE) {
 			result = EvalBinaryNull(op, left_val, right_val, left->GetLocation());
@@ -423,24 +424,24 @@ namespace LJ {
 		ValueBase *left_val;
 		ValueBase *right_val;
 		
-		Value<boolean, BOOLEAN_VALUE> v = new Value<boolean, BOOLEAN_VALUE>;
+		Value<boolean, BOOLEAN_VALUE> *v = new Value<boolean, BOOLEAN_VALUE>;
 
 		EvalExpression(left);
 		left_val = value_stack_.top();
 		value_stack_.pop();
 
-		if (left_val.GetType() != BOOLEAN_VALUE) {
+		if (left_val->GetType() != BOOLEAN_VALUE) {
 			Error(left->GetLocation(), "EvalLogicalAndOrExpression error");
 		}
 		if (op == LOGICAL_AND_EXPRESSION) {
-			if (!dynamic_cast<Value<boolean, BOOLEAN_VALUE> *>(left_val).value_) {
-				v.value_ = 0;
+			if (!dynamic_cast<Value<boolean, BOOLEAN_VALUE> *>(left_val)->value_) {
+				v->value_ = 0;
 				goto FUNC_END;
 			}
 		} 
 		else if (op == LOGICAL_OR_EXPRESSION) {
-			if (dynamic_cast<Value<boolean, BOOLEAN_VALUE> *>(left_val).value_) {
-				v.value_ = 1;
+			if (dynamic_cast<Value<boolean, BOOLEAN_VALUE> *>(left_val)->value_) {
+				v->value_ = 1;
 				goto FUNC_END;
 			}
 		} else {
@@ -451,7 +452,7 @@ namespace LJ {
 		right_val = value_stack_.top();
 		value_stack_.pop();
 
-		v.value_ = dynamic_cast<Value<boolean, BOOLEAN_VALUE> *>(right_val).value_;
+		v->value_ = dynamic_cast<Value<boolean, BOOLEAN_VALUE> *>(right_val)->value_;
 
 FUNC_END:
 		value_stack_.push(v);
@@ -499,7 +500,7 @@ FUNC_END:
 			arg_val = value_stack_.top();
 			value_stack_.pop();
 
-			local_value_stack_.top()[*param_p] = arg_val
+			local_value_stack_.top()[*param_p] = arg_val;
 		}
 
 		if (param_p != func->GetParamList()->end()) {
@@ -561,7 +562,7 @@ FUNC_END:
 			EvalStringExpression(*(std::string *)expr->GetValue(0));
 			break;
 		case IDENTIFIER_EXPRESSION:
-			EvalIdentifierExpression(*(std::string *)expr->GetValue(0));
+			EvalIdentifierExpression(expr);
 			break;
 		case ASSIGN_EXPRESSION:
 			EvalAssignExpression((Expression *)expr->GetValue(0), (Expression *)expr->GetValue(1));

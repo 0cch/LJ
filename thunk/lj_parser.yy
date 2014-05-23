@@ -14,7 +14,11 @@
 
 extern LJ::location loc;
 
+namespace LJ {
 class LJ_Driver;
+}
+
+
 }
 
 // The parsing context.
@@ -176,7 +180,7 @@ statement_list
         ;
 expression
         : logical_or_expression {$$ = $1;}
-        | IDENTIFIER ASSIGN expression
+        | primary_expression ASSIGN expression
         {
             $$ = MAKE_BIN_EXP(ASSIGN_EXPRESSION, $1, $3, loc);
         }
