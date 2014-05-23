@@ -21,7 +21,7 @@ namespace LJ {
 	};
 
 	template<class T, ValueType N>
-	class Value : ValueBase {
+	class Value : public ValueBase {
 	public:
 		Value() {}
 		~Value() {}
@@ -34,7 +34,7 @@ namespace LJ {
 	};
 
 	template<ValueType N>
-	class Value<NullType, N> : ValueBase {
+	class Value<NullType, N> :  public ValueBase {
 	public:
 		Value() {}
 		~Value() {}

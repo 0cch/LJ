@@ -209,7 +209,7 @@ namespace LJ {
 
 	typedef std::list<Expression *> ArgumentList;
 	template<>
-	class BinaryExpression<FUNCTION_CALL_EXPRESSION> : public Expression{
+	class BinaryExpression<FUNCTION_CALL_EXPRESSION> : public Expression {
 	public:
 	public:
 		BinaryExpression(const std::string &n0, ArgumentList *a1, location &l) : Expression(l), n0_(n0), a1_(a1) {}
