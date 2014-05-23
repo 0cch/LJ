@@ -75,7 +75,7 @@ namespace LJ {
 
 	class Expression {
 	public:
-		Expression(location &l) : loc_(l){}
+		Expression(const location &l) : loc_(l){}
 		virtual ~Expression() {}
 
 		virtual ExpressionType GetType() const = 0;
@@ -99,7 +99,7 @@ namespace LJ {
 	template<ExpressionType T, class U>
 	class ValueExpression : public Expression {
 	public:
-		ValueExpression(U value, location &l) : Expression(l), value_(value) {}
+		ValueExpression(U value, const location &l) : Expression(l), value_(value) {}
 		~ValueExpression() {}
 
 		ExpressionType GetType() const override {
@@ -143,7 +143,7 @@ namespace LJ {
 	template<ExpressionType T>
 	class UnaryExpression : public Expression {
 	public:
-		UnaryExpression(Expression *e0, location &l) : Expression(l), e0_(e0) {}
+		UnaryExpression(Expression *e0, const location &l) : Expression(l), e0_(e0) {}
 		~UnaryExpression() { delete e0_; }
 
 		ExpressionType GetType() const override {
@@ -176,7 +176,7 @@ namespace LJ {
 	class BinaryExpression : public Expression {
 	public:
 	public:
-		BinaryExpression(Expression *e0, Expression *e1, location &l) : Expression(l), e0_(e0), e1_(e1) {}
+		BinaryExpression(Expression *e0, Expression *e1, const location &l) : Expression(l), e0_(e0), e1_(e1) {}
 		~BinaryExpression() {
 			delete e0_;
 			delete e1_;
@@ -212,7 +212,7 @@ namespace LJ {
 	class BinaryExpression<FUNCTION_CALL_EXPRESSION> : public Expression {
 	public:
 	public:
-		BinaryExpression(const std::string &n0, ArgumentList *a1, location &l) : Expression(l), n0_(n0), a1_(a1) {}
+		BinaryExpression(const std::string &n0, ArgumentList *a1, const location &l) : Expression(l), n0_(n0), a1_(a1) {}
 		~BinaryExpression() {
 			DeleteElems(*a1_);
 			delete a1_;
@@ -239,40 +239,12 @@ namespace LJ {
 			}
 		}
 
+		std::string& GetFunctionName() {return n0_;}
+		ArgumentList * GetArgList() {return a1_;}
+
 	private:
 		std::string n0_;
 		ArgumentList *a1_;
-	};
-
-	template<>
-	class BinaryExpression<ASSIGN_EXPRESSION> : public Expression{
-	public:
-	public:
-		BinaryExpression(const std::string &n0, Expression *e1, location &l) : Expression(l), n0_(n0), e1_(e1) {}
-		~BinaryExpression() { delete e1_; }
-
-		ExpressionType GetType() const override {
-			return ASSIGN_EXPRESSION;
-		}
-
-		void Dump(int indent) const override {
-			PrintIndent(indent++);
-			std::cout << GetExpressionTypeString(GetType()) << " = [" << n0_ << "]" << std::endl;
-			e1_->Dump(indent);
-		}
-
-		void* GetValue(int index) override {
-			if (index == 0) {
-				return &n0_;
-			}
-			else {
-				return e1_;
-			}
-		}
-
-	private:
-		std::string n0_;
-		Expression *e1_;
 	};
 
 	enum StatementType {
@@ -290,7 +262,7 @@ namespace LJ {
 
 	class Statement {
 	public:
-		Statement(location &l) : loc_(l) {}
+		Statement(const location &l) : loc_(l) {}
 		virtual ~Statement() {}
 
 		virtual StatementType GetType() const = 0;
@@ -356,7 +328,7 @@ namespace LJ {
 
 	class ExpressionStatement : public Statement {
 	public:
-		ExpressionStatement(Expression *e, location &l) : Statement(l), e_(e) {}
+		ExpressionStatement(Expression *e, const location &l) : Statement(l), e_(e) {}
 		~ExpressionStatement() {
 			delete e_;
 		}
@@ -377,7 +349,7 @@ namespace LJ {
 
 	class ReturnStatement : public Statement {
 	public:
-		ReturnStatement(Expression *e, location &l) : Statement(l), e_(e) {}
+		ReturnStatement(Expression *e, const location &l) : Statement(l), e_(e) {}
 		~ReturnStatement() {
 			delete e_;
 		}
@@ -398,7 +370,7 @@ namespace LJ {
 
 	class GlobalStatement : public Statement {
 	public:
-		GlobalStatement(IdentifierList *id_list, location &l) : Statement(l), identifier_list_(id_list) {}
+		GlobalStatement(IdentifierList *id_list, const location &l) : Statement(l), identifier_list_(id_list) {}
 		~GlobalStatement() {
 			delete identifier_list_;
 		}
@@ -427,7 +399,7 @@ namespace LJ {
 
 	class IfStatement : public Statement {
 	public:
-		IfStatement(Expression *e, Block *then_b, ElseifList *elseif_list, Block *else_b, location &l) :
+		IfStatement(Expression *e, Block *then_b, ElseifList *elseif_list, Block *else_b, const location &l) :
 			Statement(l), e_(e), then_b_(then_b), elseif_list_(elseif_list), else_b_(else_b) {}
 		~IfStatement() {
 			delete e_;
@@ -474,7 +446,7 @@ namespace LJ {
 
 	class WhileStatement : public Statement {
 	public:
-		WhileStatement(Expression *e, Block *b, location &l) :
+		WhileStatement(Expression *e, Block *b, const location &l) :
 			Statement(l), e_(e), b_(b) {}
 		~WhileStatement() {
 			delete e_;
@@ -502,7 +474,7 @@ namespace LJ {
 
 	class ForStatement : public Statement {
 	public:
-		ForStatement(Expression *init_e, Expression *condition_e, Expression *post_e, Block *b, location &l) :
+		ForStatement(Expression *init_e, Expression *condition_e, Expression *post_e, Block *b, const location &l) :
 			Statement(l), init_e_(init_e), condition_e_(condition_e), post_e_(post_e), b_(b) {}
 		~ForStatement() {
 			delete init_e_;
@@ -546,7 +518,7 @@ namespace LJ {
 	template<StatementType T>
 	class SimpleStatement : public Statement {
 	public:
-		SimpleStatement(location &l) : Statement(l) {}
+		SimpleStatement(const location &l) : Statement(l) {}
 		~SimpleStatement() {}
 
 		StatementType GetType() const override {
@@ -561,16 +533,28 @@ namespace LJ {
 
 	typedef std::list<std::string> ParameterList;
 
-	class FunctionDefiniton {
+	enum FunctionType {
+		FUNCTION_DEFINITION = 1
+	};
+
+	class FunctionDefinition {
 	public:
-		FunctionDefiniton(const std::string &name, ParameterList *p, Block *b, location l) :
+		FunctionDefinition(const std::string &name, ParameterList *p, Block *b, const location &l) :
 			name_(name), p_(p), b_(b), loc_(l) {}
-		~FunctionDefiniton() {
+		~FunctionDefinition() {
 			delete p_;
 			delete b_;
 		}
 		location& GetLocation() { return loc_; }
 		void SetLocation(location &val) { loc_ = val; }
+		FunctionType GetType() {
+			return FUNCTION_DEFINITION;
+		}
+
+		std::string& GetFunctionName() {return name_;}
+		ParameterList * GetParamList() {return p_;}
+		Block * GetBlock() {return b_;}
+
 	private:
 		location loc_;
 		ParameterList *p_;

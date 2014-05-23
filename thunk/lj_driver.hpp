@@ -35,7 +35,7 @@ namespace LJ {
 
 		void Dump();
 
-		void AddFunction(FunctionDefiniton *f);
+		void AddFunction(FunctionDefinition *f);
 
 		void EvalBooleanExpression(boolean boolean_value);
 		void EvalIntExpression(__int64 int_value);
@@ -46,9 +46,18 @@ namespace LJ {
 		ValueBase ** GetIdentifierLValue(const std::string &identifier, bool is_global_value);
 		ValueBase ** GetLValue(Expression *expr);
 		void EvalAssignExpression(Expression *left, Expression *right);
-		boolean EvalBinaryBoolean(ExpressionType op, boolean left, boolean right, location &l);
-		ValueBase* EvalBinaryInt(ExpressionType op, __int64 left, __int64 right, location &l);
-		ValueBase* EvalBinaryDouble(ExpressionType op, double left, double right, location &l);
+		ValueBase* EvalBinaryBoolean(ExpressionType op, boolean left, boolean right, const location &l);
+		ValueBase* EvalBinaryInt(ExpressionType op, __int64 left, __int64 right, const location &l);
+		ValueBase* EvalBinaryDouble(ExpressionType op, double left, double right, const location &l);
+		ValueBase* LJ_Driver::EvalCompareString(ExpressionType op, std::string &left, std::string &right, const location &l);
+		ValueBase* LJ_Driver::EvalBinaryNull(ExpressionType op, ValueBase *left, ValueBase *right, const location &l);
+		void LJ_Driver::EvalBinaryExpression(ExpressionType op, Expression *left, Expression *right);
+		ValueBase* LJ_Driver::ChainString(std::string &left, std::string &right);
+		void LJ_Driver::EvalLogicalAndOrExpression(ExpressionType op, Expression *left, Expression *right);
+		void LJ_Driver::EvalMinusExpression(Expression *expr);
+		void LJ_Driver::CallFunction(Expression *e, FunctionDefinition *func);
+		void LJ_Driver::EvalFunctionCallExpression(Expression *expr);
+		void LJ_Driver::EvalExpression(Expression *expr);
 		StatementList *statement_list_;
 
 		std::stack<ValueBase *> value_stack_;
@@ -58,7 +67,7 @@ namespace LJ {
 		std::stack<std::map<std::string, ValueBase *>> local_value_stack_;
 
 	private:
-		std::list<FunctionDefiniton *> function_list_;
+		std::list<FunctionDefinition *> function_list_;
 
 	};
 
