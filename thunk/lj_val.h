@@ -44,6 +44,24 @@ namespace LJ {
 		}
 	};
 
+	enum StatementResultType {
+		NORMAL_STATEMENT_RESULT = 1,
+		RETURN_STATEMENT_RESULT,
+		BREAK_STATEMENT_RESULT,
+		CONTINUE_STATEMENT_RESULT,
+		STATEMENT_RESULT_TYPE_COUNT_PLUS_1
+	};
+
+	class StatementResult {
+	public:
+		StatementResult(StatementResultType t, ValueBase *v) :
+		value_(v), type_(t) {}
+		~StatementResult() {}
+
+		ValueBase *value_;
+		StatementResultType type_;
+	};
+
 }
 
 

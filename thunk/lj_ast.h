@@ -30,9 +30,9 @@
 
 #define MAKE_ELSEIF_LIST(r, n)			r = new ElseifList; r->push_back(n)
 #define ADD_ELSEIF_LIST(r, o, n)		o->push_back(n); r = o;
-#define MAKE_ELSEIF(r, n, m)			r = new Elseif(n, m);
+#define MAKE_ELSEIF(r, n, m, l)			r = new Elseif(n, m, l);
 
-#define MAKE_BLOCK(r, m)				r = new Block(m)
+#define MAKE_BLOCK(r, m, l)				r = new Block(m, l)
 
 #define MAKE_ARGUMENT_LIST(r, n)		r = new ArgumentList; r->push_back(n)
 #define ADD_ARGUMENT_LIST(r, o, n)		o->push_back(n); r = o;
@@ -277,6 +277,8 @@ namespace LJ {
 			}
 		}
 
+		virtual void *GetValue(int index) = 0;
+
 	private:
 		location loc_;
 	};
@@ -286,12 +288,11 @@ namespace LJ {
 
 	class Block {
 	public:
-		Block(StatementList *s) : statement_list_(s){}
+		Block(StatementList *s, const location &l) : statement_list_(s), loc_(l) {}
 		~Block() {
 			DeleteElems(*statement_list_);
 			delete statement_list_;
 		}
-		StatementList& GetStatementList() { return *statement_list_; }
 
 		void Dump(int indent) const {
 			std::cout << "BLOCK" << std::endl;
@@ -301,17 +302,23 @@ namespace LJ {
 			}
 		}
 
+		void *GetValue(int index) { return statement_list_; }
+
 	private:
 		StatementList *statement_list_;
+		location loc_;
 
 	};
 
 	class Elseif {
 	public:
-		Elseif(Expression *e, Block *b) : e_(e), b_(b){}
+		Elseif(Expression *e, Block *b, const location &l) : e_(e), b_(b), loc_(l){}
 		~Elseif() {
 			delete b_;
 		}
+
+		location& GetLocation() { return loc_; }
+		void SetLocation(location &val) { loc_ = val; }
 
 		void Dump(int indent) const {
 			std::cout << "ELSEIF" << std::endl;
@@ -319,9 +326,20 @@ namespace LJ {
 			b_->Dump(indent);
 		}
 
+		void *GetValue(int index) {
+			if (index == 0) {
+				return e_;
+			}
+			else {
+				return b_;
+			}
+
+		}
+
 	private:
 		Expression *e_;
 		Block *b_;
+		location loc_;
 	};
 	typedef std::list<Elseif *> ElseifList;
 
@@ -343,6 +361,8 @@ namespace LJ {
 			e_->Dump(indent);
 		}
 
+		void *GetValue(int index) override { return e_; }
+
 	private:
 		Expression *e_;
 	};
@@ -363,6 +383,9 @@ namespace LJ {
 			std::cout << GetStatementTypeString(GetType()) << std::endl;
 			e_->Dump(indent);
 		}
+
+		void *GetValue(int index) override { return e_; }
+
 
 	private:
 		Expression *e_;
@@ -392,6 +415,8 @@ namespace LJ {
 			}
 			std::cout << "]";
 		}
+
+		void *GetValue(int index) override { return identifier_list_; }
 
 	private:
 		IdentifierList *identifier_list_;
@@ -437,6 +462,21 @@ namespace LJ {
 			
 		}
 
+		void *GetValue(int index) override {
+			if (index == 0) {
+				return e_;
+			}
+			else if (index == 1) {
+				return then_b_;
+			}
+			else if (index == 2) {
+				return elseif_list_;
+			}
+			else {
+				return else_b_;
+			}
+		}
+
 	private:
 		Expression *e_;
 		Block *then_b_;
@@ -464,6 +504,15 @@ namespace LJ {
 			if (b_ != NULL) {
 				PrintIndent(indent);
 				b_->Dump(indent);
+			}
+		}
+
+		void *GetValue(int index) override {
+			if (index == 0) {
+				return e_;
+			}
+			else {
+				return b_;
 			}
 		}
 
@@ -508,6 +557,21 @@ namespace LJ {
 			}
 		}
 
+		void *GetValue(int index) override {
+			if (index == 0) {
+				return init_e_;
+			}
+			else if (index == 1) {
+				return condition_e_;
+			}
+			else if (index == 2) {
+				return post_e_;
+			}
+			else {
+				return b_;
+			}
+		}
+
 	private:
 		Expression *init_e_;
 		Expression *condition_e_;
@@ -529,6 +593,8 @@ namespace LJ {
 			PrintIndent(indent);
 			std::cout << GetStatementTypeString(GetType()) << std::endl;
 		}
+
+		void *GetValue(int index) override { return NULL; }
 	};
 
 	typedef std::list<std::string> ParameterList;

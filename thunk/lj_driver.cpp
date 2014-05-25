@@ -109,7 +109,7 @@ namespace LJ {
 		value_stack_.push(v);
 	}
 
-	ValueBase ** LJ_Driver::GetIdentifierLValue(const std::string &identifier, bool is_global_value)
+	ValueBase ** LJ_Driver::GetIdentifierLValue(const std::string &identifier)
 	{
 		std::map<std::string, ValueBase *>::iterator it;
 		it = local_value_stack_.top().find(identifier);
@@ -125,7 +125,7 @@ namespace LJ {
 
 		std::pair<const std::string, ValueBase *> v(identifier, NULL);
 
-		if (is_global_value) {
+		if (local_value_stack_.size() == 0) {
 			return &global_value_.insert(v).first->second;
 		}
 		else {
@@ -136,7 +136,7 @@ namespace LJ {
 	ValueBase ** LJ_Driver::GetLValue(Expression *expr)
 	{
 		if (expr->GetType() == IDENTIFIER_EXPRESSION) {
-			return GetIdentifierLValue(*((std::string *)expr->GetValue(0)), false);
+			return GetIdentifierLValue(*((std::string *)expr->GetValue(0)));
 		}
 		else {
 			Error(expr->GetLocation(), "GetLValue error");
@@ -485,7 +485,6 @@ FUNC_END:
 		BinaryExpression<FUNCTION_CALL_EXPRESSION> *expr = dynamic_cast<BinaryExpression<FUNCTION_CALL_EXPRESSION> *>(e);
 
 		ValueBase *v;
-		Statement *result;
 		ArgumentList::iterator arg_p;
 		ParameterList::iterator param_p;
 
@@ -506,12 +505,12 @@ FUNC_END:
 		if (param_p != func->GetParamList()->end()) {
 			Error(expr->GetLocation(), "CallFunction error");
 		}
-// 		result = ExecuteStatementList(func->GetBlock()->GetStatementList());
-// 		if (result.GetType() == RETURN_STATEMENT_RESULT) {
-// 			value = result.u.return_value;
-// 		} else {
-// 			v = new Value<NullType, NULL_VALUE>;
-// 		}
+		StatementResult result = ExecuteStatementList((StatementList *)func->GetBlock()->GetValue(0));
+		if (result.type_ == RETURN_STATEMENT_RESULT) {
+			v = result.value_;
+		} else {
+			v = new Value<NullType, NULL_VALUE>;
+		}
 
 		value_stack_.push(v);
 	}
@@ -596,5 +595,231 @@ FUNC_END:
 		default:
 			__asm int 3;
 		}
+	}
+
+	ValueBase *LJ_Driver::GetEvalExpression(Expression *expr)
+	{
+		EvalExpression(expr);
+		ValueBase *v = value_stack_.top();
+		value_stack_.pop();
+		return v;
+	}
+
+	StatementResult LJ_Driver::ExecuteExpressionStatement(Statement *statement)
+	{
+		ValueBase *v;
+
+		v = GetEvalExpression((Expression *)statement->GetValue(0));
+
+		return StatementResult(NORMAL_STATEMENT_RESULT, v);
+	}
+
+	StatementResult	LJ_Driver::ExecuteGlobalStatement(Statement *statement)
+	{
+		if (local_value_stack_.size() == 0) {
+			Error(statement->GetLocation(), "ExecuteGlobalStatement error");
+		}
+
+		IdentifierList * identifier_list = (IdentifierList *)statement->GetValue(0);
+		for (IdentifierList::iterator it = identifier_list->begin();
+			it != identifier_list->end(); ++it) {
+
+			if (global_value_.find(*it) == global_value_.end()) {
+				Error(statement->GetLocation(), "ExecuteGlobalStatement error");
+			}
+		}
+
+		return StatementResult(NORMAL_STATEMENT_RESULT, NULL);
+	}
+
+	StatementResult LJ_Driver::ExecuteElseif(ElseifList *elseif_list, boolean *executed)
+	{
+		StatementResult result(NORMAL_STATEMENT_RESULT, NULL);
+		
+		*executed = 0;
+		for (ElseifList::iterator it = elseif_list->begin();
+			it != elseif_list->end(); ++it) {
+
+			ValueBase *v = GetEvalExpression((Expression *)(*it)->GetValue(0));
+			if (v->GetType() != BOOLEAN_VALUE) {
+				Error((*it)->GetLocation(), "ExecuteElseif error");
+			}
+
+			if (dynamic_cast<Value<boolean, BOOLEAN_VALUE> *>(v)->value_) {
+				result = ExecuteStatementList((StatementList *)((Block *)(*it)->GetValue(1))->GetValue(0));
+				*executed = 1;
+				if (result.type_ != NORMAL_STATEMENT_RESULT) {
+					goto FUNC_END;
+				}
+			}
+		}
+
+	FUNC_END:
+		return result;
+	}
+
+	StatementResult LJ_Driver::ExecuteIfStatement(Statement *statement)
+	{
+		StatementResult result(NORMAL_STATEMENT_RESULT, NULL);
+	
+		ValueBase *v = GetEvalExpression((Expression *)statement->GetValue(0));
+		if (v->GetType() != BOOLEAN_VALUE) {
+			Error(statement->GetLocation(), "ExecuteIfStatement error");
+		}
+		
+		if (dynamic_cast<Value<boolean, BOOLEAN_VALUE> *>(v)->value_) {
+			result = ExecuteStatementList((StatementList *)((Block *)statement->GetValue(1))->GetValue(0));
+		}
+		else {
+			boolean elseif_executed;
+			result = ExecuteElseif((ElseifList *)statement->GetValue(2), &elseif_executed);
+			if (result.type_ != NORMAL_STATEMENT_RESULT) {
+				goto FUNC_END;
+			}
+			if (!elseif_executed && statement->GetValue(3) != NULL) {
+				result = ExecuteStatementList((StatementList *)((Block *)statement->GetValue(3))->GetValue(0));
+			}
+		}
+
+	FUNC_END:
+		return result;
+	}
+
+	StatementResult LJ_Driver::ExecuteWhileStatement(Statement *statement)
+	{
+		StatementResult result(NORMAL_STATEMENT_RESULT, NULL);
+		
+		for (;;) {
+			ValueBase *v = GetEvalExpression((Expression *)statement->GetValue(0));
+			if (v->GetType() != BOOLEAN_VALUE) {
+				Error(statement->GetLocation(), "ExecuteWhileStatement error");
+			}
+			
+			if (!dynamic_cast<Value<boolean, BOOLEAN_VALUE> *>(v)->value_) {
+				break;
+			}
+
+			result = ExecuteStatementList((StatementList *)((Block *)statement->GetValue(1))->GetValue(0));
+			if (result.type_ == RETURN_STATEMENT_RESULT) {
+				break;
+			}
+			else if (result.type_ == BREAK_STATEMENT_RESULT) {
+				result.type_ = NORMAL_STATEMENT_RESULT;
+				break;
+			}
+		}
+
+		return result;
+	}
+
+	StatementResult LJ_Driver::ExecuteForStatement(Statement *statement)
+	{
+		StatementResult result(NORMAL_STATEMENT_RESULT, NULL);
+
+		if (statement->GetValue(0) != NULL) {
+			GetEvalExpression((Expression *)statement->GetValue(0));
+		}
+		for (;;) {
+			if (statement->GetValue(1) != NULL) {
+				ValueBase *v = GetEvalExpression((Expression *)statement->GetValue(0));
+				if (v->GetType() != BOOLEAN_VALUE) {
+					Error(statement->GetLocation(), "ExecuteForStatement error");
+				}
+				
+				if (!dynamic_cast<Value<boolean, BOOLEAN_VALUE> *>(v)->value_) {
+					break;
+				}
+			}
+			result = ExecuteStatementList((StatementList *)((Block *)statement->GetValue(3))->GetValue(0));
+			if (result.type_ == RETURN_STATEMENT_RESULT) {
+				break;
+			}
+			else if (result.type_ == BREAK_STATEMENT_RESULT) {
+				result.type_ = NORMAL_STATEMENT_RESULT;
+				break;
+			}
+
+			if (statement->GetValue(2) != NULL) {
+				GetEvalExpression((Expression *)statement->GetValue(2));
+			}
+		}
+
+		return result;
+	}
+
+	StatementResult LJ_Driver::ExecuteReturnStatement(Statement *statement)
+	{
+		StatementResult result(RETURN_STATEMENT_RESULT, NULL);
+
+		if (statement->GetValue(0) != NULL) {
+			
+			ValueBase *v = GetEvalExpression((Expression *)statement->GetValue(0));
+			return StatementResult(RETURN_STATEMENT_RESULT, v);
+		}
+		else {
+			ValueBase *v = new Value < NullType, NULL_VALUE>;
+			return StatementResult(RETURN_STATEMENT_RESULT, v);
+		}
+	}
+
+	StatementResult LJ_Driver::ExecuteBreakStatement(Statement *statement)
+	{
+		return StatementResult(BREAK_STATEMENT_RESULT, NULL);
+	}
+
+	StatementResult LJ_Driver::ExecuteContinueStatement(Statement *statement)
+	{
+		return StatementResult(CONTINUE_STATEMENT_RESULT, NULL);
+	}
+
+	StatementResult LJ_Driver::ExecuteStatement(Statement *statement)
+	{
+		StatementResult result(NORMAL_STATEMENT_RESULT, NULL);
+
+		switch (statement->GetType()) {
+		case EXPRESSION_STATEMENT:
+			result = ExecuteExpressionStatement(statement);
+			break;
+		case GLOBAL_STATEMENT:
+			result = ExecuteGlobalStatement(statement);
+			break;
+		case IF_STATEMENT:
+			result = ExecuteIfStatement(statement);
+			break;
+		case WHILE_STATEMENT:
+			result = ExecuteWhileStatement(statement);
+			break;
+		case FOR_STATEMENT:
+			result = ExecuteForStatement(statement);
+			break;
+		case RETURN_STATEMENT:
+			result = ExecuteReturnStatement(statement);
+			break;
+		case BREAK_STATEMENT:
+			result = ExecuteBreakStatement(statement);
+			break;
+		case CONTINUE_STATEMENT:
+			result = ExecuteContinueStatement(statement);
+			break;
+		default:
+			__asm int 3;
+		}
+
+		return result;
+	}
+
+	StatementResult LJ_Driver::ExecuteStatementList(StatementList *list)
+	{
+		StatementResult result(NORMAL_STATEMENT_RESULT, NULL);
+
+		for (StatementList::iterator it = list->begin();
+			it != list->end(); ++it) {
+			result = ExecuteStatement(*it);
+			if (result.type_ != NORMAL_STATEMENT_RESULT)
+				goto FUNC_END;
+		}
+
+	FUNC_END:
+		return result;
 	}
 }

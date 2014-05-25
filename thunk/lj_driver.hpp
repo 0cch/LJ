@@ -43,7 +43,7 @@ namespace LJ {
 		void EvalStringExpression(const std::string &string_value);
 		void EvalNullExpression();
 		void EvalIdentifierExpression(Expression *expr);
-		ValueBase ** GetIdentifierLValue(const std::string &identifier, bool is_global_value);
+		ValueBase ** GetIdentifierLValue(const std::string &identifier);
 		ValueBase ** GetLValue(Expression *expr);
 		void EvalAssignExpression(Expression *left, Expression *right);
 		ValueBase* EvalBinaryBoolean(ExpressionType op, boolean left, boolean right, const location &l);
@@ -58,6 +58,18 @@ namespace LJ {
 		void LJ_Driver::CallFunction(Expression *e, FunctionDefinition *func);
 		void LJ_Driver::EvalFunctionCallExpression(Expression *expr);
 		void LJ_Driver::EvalExpression(Expression *expr);
+		ValueBase *GetEvalExpression(Expression *expr);
+		StatementResult ExecuteExpressionStatement(Statement *statement);
+		StatementResult ExecuteGlobalStatement(Statement *statement);
+		StatementResult ExecuteElseif(ElseifList *elsif_list, boolean *executed);
+		StatementResult ExecuteIfStatement(Statement *statement);
+		StatementResult ExecuteWhileStatement(Statement *statement);
+		StatementResult ExecuteForStatement(Statement *statement);
+		StatementResult ExecuteReturnStatement(Statement *statement);
+		StatementResult ExecuteBreakStatement(Statement *statement);
+		StatementResult ExecuteContinueStatement(Statement *statement);
+		StatementResult ExecuteStatement(Statement *statement);
+		StatementResult ExecuteStatementList(StatementList *list);
 		StatementList *statement_list_;
 
 		std::stack<ValueBase *> value_stack_;

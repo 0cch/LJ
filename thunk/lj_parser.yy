@@ -369,7 +369,7 @@ elseif_list
 elseif
         : ELSEIF LP expression RP block
         {
-            MAKE_ELSEIF($$, $3, $5);
+            MAKE_ELSEIF($$, $3, $5, loc);
         }
         ;
 while_statement
@@ -413,11 +413,11 @@ continue_statement
 block
         : LC statement_list RC
         {
-			MAKE_BLOCK($$, $2);
+			MAKE_BLOCK($$, $2, loc);
         }
         | LC RC
         {
-            MAKE_BLOCK($$, NULL);
+            MAKE_BLOCK($$, NULL, loc);
         }
         ;
 %%
