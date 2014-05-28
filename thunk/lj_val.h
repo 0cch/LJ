@@ -62,7 +62,15 @@ namespace LJ {
 		StatementResultType type_;
 	};
 
+	typedef Value<boolean, BOOLEAN_VALUE>		BooleanValue;
+	typedef Value<__int64, INT_VALUE>			IntValue;
+	typedef Value<double, DOUBLE_VALUE>			DoubleValue;
+	typedef Value<std::string, STRING_VALUE>	StringValue;
+	typedef Value<NullType, NULL_VALUE>			NullValue;
+
 }
+
+
 
 
 #endif

@@ -72,6 +72,8 @@ namespace LJ {
 		StatementResult ExecuteStatementList(StatementList *list);
 		StatementList *statement_list_;
 
+		std::list<ValueBase *> value_list_;
+
 		std::stack<ValueBase *> value_stack_;
 
 		std::map<std::string, ValueBase *> global_value_;
@@ -95,6 +97,50 @@ namespace LJ {
 
 #define IsLogicalOperator(op) \
 	((op) == LOGICAL_AND_EXPRESSION || (op) == LOGICAL_OR_EXPRESSION)
+
+
+	__inline BooleanValue * NewBooleanValue(std::list<ValueBase *> &value_list)
+	{
+		BooleanValue *v = new BooleanValue; 
+		value_list.push_back(static_cast<ValueBase *>(v));
+		return v;
+	}
+
+	__inline IntValue * NewIntValue(std::list<ValueBase *> &value_list)
+	{
+		IntValue *v = new IntValue; 
+		value_list.push_back(static_cast<ValueBase *>(v));
+		return v;
+	}
+
+	__inline DoubleValue * NewDoubleValueValue(std::list<ValueBase *> &value_list)
+	{
+		DoubleValue *v = new DoubleValue; 
+		value_list.push_back(static_cast<ValueBase *>(v));
+		return v;
+	}
+
+	__inline StringValue * NewStringValueValue(std::list<ValueBase *> &value_list)
+	{
+		StringValue *v = new StringValue; 
+		value_list.push_back(static_cast<ValueBase *>(v));
+		return v;
+	}
+
+	__inline NullValue * NewNullValue(std::list<ValueBase *> &value_list)
+	{
+		NullValue *v = new NullValue; 
+		value_list.push_back(static_cast<ValueBase *>(v));
+		return v;
+	}
+
+
+#define NEW_BOOLEAN_VALUE()		NewBooleanValue(value_list_)
+#define NEW_INT_VALUE()			NewIntValue(value_list_)
+#define NEW_STRING_VALUE()		NewStringValueValue(value_list_)
+#define NEW_DOUBLE_VALUE()		NewDoubleValueValue(value_list_)
+#define NEW_NULL_VALUE()		NewNullValue(value_list_)
+
 }
 
 

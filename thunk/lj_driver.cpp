@@ -54,35 +54,35 @@ namespace LJ {
 
 	void LJ_Driver::EvalBooleanExpression(boolean boolean_value)
 	{
-		Value<boolean, BOOLEAN_VALUE> *v = new Value<boolean, BOOLEAN_VALUE>;
+		BooleanValue *v = NEW_BOOLEAN_VALUE();
 		v->value_ = boolean_value;
 		value_stack_.push((ValueBase *)v);
 	}
 
 	void LJ_Driver::EvalIntExpression(__int64 int_value)
 	{
-		Value<__int64, INT_VALUE> *v = new Value<__int64, INT_VALUE>;
+		IntValue *v = NEW_INT_VALUE();
 		v->value_ = int_value;
 		value_stack_.push((ValueBase *)v);
 	}
 
 	void LJ_Driver::EvalDoubleExpression(double double_value)
 	{
-		Value<double, DOUBLE_VALUE> *v = new Value<double, DOUBLE_VALUE>;
+		DoubleValue *v = NEW_DOUBLE_VALUE();
 		v->value_ = double_value;
 		value_stack_.push((ValueBase *)v);
 	}
 
 	void LJ_Driver::EvalStringExpression(const std::string &string_value)
 	{
-		Value<std::string, STRING_VALUE> *v = new Value<std::string, STRING_VALUE>;
+		StringValue *v = NEW_STRING_VALUE();
 		v->value_ = string_value;
 		value_stack_.push((ValueBase *)v);
 	}
 
 	void LJ_Driver::EvalNullExpression()
 	{
-		Value<NullType, NULL_VALUE> *v = new Value<NullType, NULL_VALUE>;
+		NullValue *v = NEW_NULL_VALUE();
 		value_stack_.push((ValueBase *)v);
 	}
 
@@ -159,7 +159,7 @@ namespace LJ {
 
 	ValueBase* LJ_Driver::EvalBinaryBoolean(ExpressionType op, boolean left, boolean right, const location &l)
 	{
-		Value<boolean, BOOLEAN_VALUE> *v = new Value<boolean, BOOLEAN_VALUE>;
+		BooleanValue *v = NEW_BOOLEAN_VALUE();
 
 		if (op == EQ_EXPRESSION) {
 			v->value_ = left == right;
@@ -176,14 +176,14 @@ namespace LJ {
 	{
 		ValueBase *v;
 
-		Value<__int64, INT_VALUE> *int_value = NULL;
-		Value<boolean, BOOLEAN_VALUE> *boolean_value = NULL;
+		IntValue *int_value = NULL;
+		BooleanValue *boolean_value = NULL;
 
 		if (IsMathOperator(op)) {
-			int_value = new Value<__int64, INT_VALUE>;
+			int_value = NEW_INT_VALUE();
 			v = int_value;
 		} else if (IsCompareOperator(op)) {
-			boolean_value = new Value<boolean, BOOLEAN_VALUE>;
+			boolean_value = NEW_BOOLEAN_VALUE();
 			v = boolean_value;
 		} else {
 			__asm int 3
@@ -249,14 +249,14 @@ namespace LJ {
 	{
 		ValueBase *v;
 
-		Value<double, DOUBLE_VALUE> *double_value = NULL;
-		Value<boolean, BOOLEAN_VALUE> *boolean_value = NULL;
+		DoubleValue *double_value = NULL;
+		BooleanValue *boolean_value = NULL;
 
 		if (IsMathOperator(op)) {
-			double_value = new Value<double, DOUBLE_VALUE>;
+			double_value = NEW_DOUBLE_VALUE();
 			v = double_value;
 		} else if (IsCompareOperator(op)) {
-			boolean_value = new Value<boolean, BOOLEAN_VALUE>;
+			boolean_value = NEW_BOOLEAN_VALUE();
 			v = boolean_value;
 		} else {
 			__asm int 3
@@ -321,7 +321,7 @@ namespace LJ {
 
 	ValueBase* LJ_Driver::EvalCompareString(ExpressionType op, std::string &left, std::string &right, const location &l)
 	{
-		Value<boolean, BOOLEAN_VALUE> *v = new Value<boolean, BOOLEAN_VALUE>;
+		BooleanValue *v = NEW_BOOLEAN_VALUE();
 		int cmp = left.compare(right);
 
 		if (op == EQ_EXPRESSION) {
@@ -345,7 +345,7 @@ namespace LJ {
 
 	ValueBase* LJ_Driver::EvalBinaryNull(ExpressionType op, ValueBase *left, ValueBase *right, const location &l)
 	{
-		Value<boolean, BOOLEAN_VALUE> *v = new Value<boolean, BOOLEAN_VALUE>;
+		BooleanValue *v = NEW_BOOLEAN_VALUE();
 
 		if (op == EQ_EXPRESSION) {
 			v->value_ = left->GetType() == NULL_VALUE && right->GetType() == NULL_VALUE;
@@ -360,7 +360,7 @@ namespace LJ {
 
 	ValueBase* LJ_Driver::ChainString(std::string &left, std::string &right)
 	{
-		Value<std::string, STRING_VALUE> *v = new Value<std::string, STRING_VALUE>;
+		StringValue *v = NEW_STRING_VALUE();
 		v->value_ = left + right;
 		return v;
 	}
@@ -378,33 +378,33 @@ namespace LJ {
 		left_val = *(value_stack_._Get_container().end() - 2);
 
 		if (left_val->GetType() == INT_VALUE && right_val->GetType() == INT_VALUE) {
-			result = EvalBinaryInt(op, dynamic_cast<Value<__int64, INT_VALUE> *>(left_val)->value_, 
-				dynamic_cast<Value<__int64, INT_VALUE> *>(right_val)->value_, left->GetLocation());
+			result = EvalBinaryInt(op, dynamic_cast<IntValue *>(left_val)->value_, 
+				dynamic_cast<IntValue *>(right_val)->value_, left->GetLocation());
 		} 
 		else if (left_val->GetType() == DOUBLE_VALUE && right_val->GetType() == DOUBLE_VALUE) {
-			result = EvalBinaryDouble(op, dynamic_cast<Value<double, DOUBLE_VALUE> *>(left_val)->value_,
-				dynamic_cast<Value<double, DOUBLE_VALUE> *>(right_val)->value_, left->GetLocation());
+			result = EvalBinaryDouble(op, dynamic_cast<DoubleValue *>(left_val)->value_,
+				dynamic_cast<DoubleValue *>(right_val)->value_, left->GetLocation());
 		} 
 		else if (left_val->GetType() == INT_VALUE && right_val->GetType() == DOUBLE_VALUE) {
-			result = EvalBinaryDouble(op, (double)dynamic_cast<Value<__int64, INT_VALUE> *>(left_val)->value_,
-				dynamic_cast<Value<double, DOUBLE_VALUE> *>(right_val)->value_, left->GetLocation());
+			result = EvalBinaryDouble(op, (double)dynamic_cast<IntValue *>(left_val)->value_,
+				dynamic_cast<DoubleValue *>(right_val)->value_, left->GetLocation());
 		} 
 		else if (left_val->GetType() == DOUBLE_VALUE && right_val->GetType() == INT_VALUE) {
-			result = EvalBinaryDouble(op, dynamic_cast<Value<double, DOUBLE_VALUE> *>(left_val)->value_,
-				(double)dynamic_cast<Value<__int64, INT_VALUE> *>(right_val)->value_, left->GetLocation());
+			result = EvalBinaryDouble(op, dynamic_cast<DoubleValue *>(left_val)->value_,
+				(double)dynamic_cast<IntValue *>(right_val)->value_, left->GetLocation());
 		} 
 		else if (left_val->GetType() == BOOLEAN_VALUE && right_val->GetType() == BOOLEAN_VALUE) {
 
-			result = EvalBinaryBoolean(op, dynamic_cast<Value<boolean, BOOLEAN_VALUE> *>(left_val)->value_,
-				dynamic_cast<Value<boolean, BOOLEAN_VALUE> *>(right_val)->value_, left->GetLocation());
+			result = EvalBinaryBoolean(op, dynamic_cast<BooleanValue *>(left_val)->value_,
+				dynamic_cast<BooleanValue *>(right_val)->value_, left->GetLocation());
 		} 
 		else if (left_val->GetType() == STRING_VALUE && op == ADD_EXPRESSION) {
-			result = ChainString(dynamic_cast<Value<std::string, STRING_VALUE> *>(left_val)->value_,
-				dynamic_cast<Value<std::string, STRING_VALUE> *>(right_val)->value_);
+			result = ChainString(dynamic_cast<StringValue *>(left_val)->value_,
+				dynamic_cast<StringValue *>(right_val)->value_);
 		} 
 		else if (left_val->GetType() == STRING_VALUE && right_val->GetType() == STRING_VALUE) {
-			result = EvalCompareString(op, dynamic_cast<Value<std::string, STRING_VALUE> *>(left_val)->value_, 
-				dynamic_cast<Value<std::string, STRING_VALUE> *>(right_val)->value_, left->GetLocation());
+			result = EvalCompareString(op, dynamic_cast<StringValue *>(left_val)->value_, 
+				dynamic_cast<StringValue *>(right_val)->value_, left->GetLocation());
 		} 
 		else if (left_val->GetType() == NULL_VALUE || right_val->GetType() == NULL_VALUE) {
 			result = EvalBinaryNull(op, left_val, right_val, left->GetLocation());
@@ -424,7 +424,7 @@ namespace LJ {
 		ValueBase *left_val;
 		ValueBase *right_val;
 		
-		Value<boolean, BOOLEAN_VALUE> *v = new Value<boolean, BOOLEAN_VALUE>;
+		BooleanValue *v = NEW_BOOLEAN_VALUE();
 
 		EvalExpression(left);
 		left_val = value_stack_.top();
@@ -434,13 +434,13 @@ namespace LJ {
 			Error(left->GetLocation(), "EvalLogicalAndOrExpression error");
 		}
 		if (op == LOGICAL_AND_EXPRESSION) {
-			if (!dynamic_cast<Value<boolean, BOOLEAN_VALUE> *>(left_val)->value_) {
+			if (!dynamic_cast<BooleanValue *>(left_val)->value_) {
 				v->value_ = 0;
 				goto FUNC_END;
 			}
 		} 
 		else if (op == LOGICAL_OR_EXPRESSION) {
-			if (dynamic_cast<Value<boolean, BOOLEAN_VALUE> *>(left_val)->value_) {
+			if (dynamic_cast<BooleanValue *>(left_val)->value_) {
 				v->value_ = 1;
 				goto FUNC_END;
 			}
@@ -452,7 +452,7 @@ namespace LJ {
 		right_val = value_stack_.top();
 		value_stack_.pop();
 
-		v->value_ = dynamic_cast<Value<boolean, BOOLEAN_VALUE> *>(right_val)->value_;
+		v->value_ = dynamic_cast<BooleanValue *>(right_val)->value_;
 
 FUNC_END:
 		value_stack_.push(v);
@@ -466,12 +466,12 @@ FUNC_END:
 		v = value_stack_.top();
 		value_stack_.pop();
 		if (v->GetType() == INT_VALUE) {
-			Value<__int64, INT_VALUE> *int_value = new Value<__int64, INT_VALUE>;
-			int_value->value_ = -dynamic_cast<Value<__int64, INT_VALUE> *>(v)->value_;
+			IntValue *int_value = NEW_INT_VALUE();
+			int_value->value_ = -dynamic_cast<IntValue *>(v)->value_;
 			result = int_value;
 		} else if (v->GetType() == DOUBLE_VALUE) {
-			Value<double, DOUBLE_VALUE> *double_value = new Value<double, DOUBLE_VALUE>;
-			double_value->value_ = -dynamic_cast<Value<double, DOUBLE_VALUE> *>(v)->value_;
+			DoubleValue *double_value = NEW_DOUBLE_VALUE();
+			double_value->value_ = -dynamic_cast<DoubleValue *>(v)->value_;
 			result = double_value;
 		} else {
 			Error(expr->GetLocation(), "EvalMinusExpression error");
@@ -509,7 +509,7 @@ FUNC_END:
 		if (result.type_ == RETURN_STATEMENT_RESULT) {
 			v = result.value_;
 		} else {
-			v = new Value<NullType, NULL_VALUE>;
+			v = NEW_NULL_VALUE();
 		}
 
 		value_stack_.push(v);
@@ -645,7 +645,7 @@ FUNC_END:
 				Error((*it)->GetLocation(), "ExecuteElseif error");
 			}
 
-			if (dynamic_cast<Value<boolean, BOOLEAN_VALUE> *>(v)->value_) {
+			if (dynamic_cast<BooleanValue *>(v)->value_) {
 				result = ExecuteStatementList((StatementList *)((Block *)(*it)->GetValue(1))->GetValue(0));
 				*executed = 1;
 				if (result.type_ != NORMAL_STATEMENT_RESULT) {
@@ -667,7 +667,7 @@ FUNC_END:
 			Error(statement->GetLocation(), "ExecuteIfStatement error");
 		}
 		
-		if (dynamic_cast<Value<boolean, BOOLEAN_VALUE> *>(v)->value_) {
+		if (dynamic_cast<BooleanValue *>(v)->value_) {
 			result = ExecuteStatementList((StatementList *)((Block *)statement->GetValue(1))->GetValue(0));
 		}
 		else {
@@ -695,7 +695,7 @@ FUNC_END:
 				Error(statement->GetLocation(), "ExecuteWhileStatement error");
 			}
 			
-			if (!dynamic_cast<Value<boolean, BOOLEAN_VALUE> *>(v)->value_) {
+			if (!dynamic_cast<BooleanValue *>(v)->value_) {
 				break;
 			}
 
@@ -726,7 +726,7 @@ FUNC_END:
 					Error(statement->GetLocation(), "ExecuteForStatement error");
 				}
 				
-				if (!dynamic_cast<Value<boolean, BOOLEAN_VALUE> *>(v)->value_) {
+				if (!dynamic_cast<BooleanValue *>(v)->value_) {
 					break;
 				}
 			}
