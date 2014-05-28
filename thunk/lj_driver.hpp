@@ -141,6 +141,12 @@ namespace LJ {
 #define NEW_DOUBLE_VALUE()		NewDoubleValueValue(value_list_)
 #define NEW_NULL_VALUE()		NewNullValue(value_list_)
 
+#define TO_BOOLEAN_VALUE(v)		dynamic_cast<BooleanValue *>(v)
+#define TO_INT_VALUE(v)			dynamic_cast<IntValue *>(v)
+#define TO_DOUBLE_VALUE(v)		dynamic_cast<DoubleValue *>(v)
+#define TO_STRING_VALUE(v)		dynamic_cast<StringValue *>(v)
+#define TO_NULL_VALUE(v)		dynamic_cast<NullValue *>(v)
+
 }
 
 

@@ -378,33 +378,33 @@ namespace LJ {
 		left_val = *(value_stack_._Get_container().end() - 2);
 
 		if (left_val->GetType() == INT_VALUE && right_val->GetType() == INT_VALUE) {
-			result = EvalBinaryInt(op, dynamic_cast<IntValue *>(left_val)->value_, 
-				dynamic_cast<IntValue *>(right_val)->value_, left->GetLocation());
+			result = EvalBinaryInt(op, TO_INT_VALUE(left_val)->value_, 
+				TO_INT_VALUE(right_val)->value_, left->GetLocation());
 		} 
 		else if (left_val->GetType() == DOUBLE_VALUE && right_val->GetType() == DOUBLE_VALUE) {
-			result = EvalBinaryDouble(op, dynamic_cast<DoubleValue *>(left_val)->value_,
-				dynamic_cast<DoubleValue *>(right_val)->value_, left->GetLocation());
+			result = EvalBinaryDouble(op, TO_DOUBLE_VALUE(left_val)->value_,
+				TO_DOUBLE_VALUE(right_val)->value_, left->GetLocation());
 		} 
 		else if (left_val->GetType() == INT_VALUE && right_val->GetType() == DOUBLE_VALUE) {
-			result = EvalBinaryDouble(op, (double)dynamic_cast<IntValue *>(left_val)->value_,
-				dynamic_cast<DoubleValue *>(right_val)->value_, left->GetLocation());
+			result = EvalBinaryDouble(op, (double)TO_INT_VALUE(left_val)->value_,
+				TO_DOUBLE_VALUE(right_val)->value_, left->GetLocation());
 		} 
 		else if (left_val->GetType() == DOUBLE_VALUE && right_val->GetType() == INT_VALUE) {
-			result = EvalBinaryDouble(op, dynamic_cast<DoubleValue *>(left_val)->value_,
-				(double)dynamic_cast<IntValue *>(right_val)->value_, left->GetLocation());
+			result = EvalBinaryDouble(op, TO_DOUBLE_VALUE(left_val)->value_,
+				(double)TO_INT_VALUE(right_val)->value_, left->GetLocation());
 		} 
 		else if (left_val->GetType() == BOOLEAN_VALUE && right_val->GetType() == BOOLEAN_VALUE) {
 
-			result = EvalBinaryBoolean(op, dynamic_cast<BooleanValue *>(left_val)->value_,
-				dynamic_cast<BooleanValue *>(right_val)->value_, left->GetLocation());
+			result = EvalBinaryBoolean(op, TO_BOOLEAN_VALUE(left_val)->value_,
+				TO_BOOLEAN_VALUE(right_val)->value_, left->GetLocation());
 		} 
 		else if (left_val->GetType() == STRING_VALUE && op == ADD_EXPRESSION) {
-			result = ChainString(dynamic_cast<StringValue *>(left_val)->value_,
-				dynamic_cast<StringValue *>(right_val)->value_);
+			result = ChainString(TO_STRING_VALUE(left_val)->value_,
+				TO_STRING_VALUE(right_val)->value_);
 		} 
 		else if (left_val->GetType() == STRING_VALUE && right_val->GetType() == STRING_VALUE) {
-			result = EvalCompareString(op, dynamic_cast<StringValue *>(left_val)->value_, 
-				dynamic_cast<StringValue *>(right_val)->value_, left->GetLocation());
+			result = EvalCompareString(op, TO_STRING_VALUE(left_val)->value_, 
+				TO_STRING_VALUE(right_val)->value_, left->GetLocation());
 		} 
 		else if (left_val->GetType() == NULL_VALUE || right_val->GetType() == NULL_VALUE) {
 			result = EvalBinaryNull(op, left_val, right_val, left->GetLocation());
@@ -434,13 +434,13 @@ namespace LJ {
 			Error(left->GetLocation(), "EvalLogicalAndOrExpression error");
 		}
 		if (op == LOGICAL_AND_EXPRESSION) {
-			if (!dynamic_cast<BooleanValue *>(left_val)->value_) {
+			if (!TO_BOOLEAN_VALUE(left_val)->value_) {
 				v->value_ = 0;
 				goto FUNC_END;
 			}
 		} 
 		else if (op == LOGICAL_OR_EXPRESSION) {
-			if (dynamic_cast<BooleanValue *>(left_val)->value_) {
+			if (TO_BOOLEAN_VALUE(left_val)->value_) {
 				v->value_ = 1;
 				goto FUNC_END;
 			}
@@ -452,7 +452,7 @@ namespace LJ {
 		right_val = value_stack_.top();
 		value_stack_.pop();
 
-		v->value_ = dynamic_cast<BooleanValue *>(right_val)->value_;
+		v->value_ = TO_BOOLEAN_VALUE(right_val)->value_;
 
 FUNC_END:
 		value_stack_.push(v);
@@ -467,11 +467,11 @@ FUNC_END:
 		value_stack_.pop();
 		if (v->GetType() == INT_VALUE) {
 			IntValue *int_value = NEW_INT_VALUE();
-			int_value->value_ = -dynamic_cast<IntValue *>(v)->value_;
+			int_value->value_ = -TO_INT_VALUE(v)->value_;
 			result = int_value;
 		} else if (v->GetType() == DOUBLE_VALUE) {
 			DoubleValue *double_value = NEW_DOUBLE_VALUE();
-			double_value->value_ = -dynamic_cast<DoubleValue *>(v)->value_;
+			double_value->value_ = -TO_DOUBLE_VALUE(v)->value_;
 			result = double_value;
 		} else {
 			Error(expr->GetLocation(), "EvalMinusExpression error");
@@ -645,7 +645,7 @@ FUNC_END:
 				Error((*it)->GetLocation(), "ExecuteElseif error");
 			}
 
-			if (dynamic_cast<BooleanValue *>(v)->value_) {
+			if (TO_BOOLEAN_VALUE(v)->value_) {
 				result = ExecuteStatementList((StatementList *)((Block *)(*it)->GetValue(1))->GetValue(0));
 				*executed = 1;
 				if (result.type_ != NORMAL_STATEMENT_RESULT) {
@@ -667,7 +667,7 @@ FUNC_END:
 			Error(statement->GetLocation(), "ExecuteIfStatement error");
 		}
 		
-		if (dynamic_cast<BooleanValue *>(v)->value_) {
+		if (TO_BOOLEAN_VALUE(v)->value_) {
 			result = ExecuteStatementList((StatementList *)((Block *)statement->GetValue(1))->GetValue(0));
 		}
 		else {
@@ -695,7 +695,7 @@ FUNC_END:
 				Error(statement->GetLocation(), "ExecuteWhileStatement error");
 			}
 			
-			if (!dynamic_cast<BooleanValue *>(v)->value_) {
+			if (!TO_BOOLEAN_VALUE(v)->value_) {
 				break;
 			}
 
@@ -726,7 +726,7 @@ FUNC_END:
 					Error(statement->GetLocation(), "ExecuteForStatement error");
 				}
 				
-				if (!dynamic_cast<BooleanValue *>(v)->value_) {
+				if (!TO_BOOLEAN_VALUE(v)->value_) {
 					break;
 				}
 			}
