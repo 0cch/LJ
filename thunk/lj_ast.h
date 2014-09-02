@@ -7,6 +7,8 @@
 #include <iostream>
 #include "location.hh"
 
+typedef unsigned char boolean;
+
 #define MAKE_VALUE_EXP(t, u, v, l)		new ValueExpression<t, u>(v, l)
 #define MAKE_EXP(t, l)					new NullExpression<t>(l)
 #define MAKE_UNARY_EXP(t, e, l)			new UnaryExpression<t>(e, l)
@@ -80,7 +82,7 @@ namespace LJ {
 
 		virtual ExpressionType GetType() const = 0;
 		virtual void Dump(int indent) const = 0;
-		virtual void* GetValue(int index) = 0;
+		virtual void Eval(LJ_Driver *driver) const = 0;
 
 		location& GetLocation() { return loc_; }
 		void SetLocation(location &val) { loc_ = val; }
@@ -111,15 +113,52 @@ namespace LJ {
 			std::cout << GetExpressionTypeString(GetType()) << " = [" << value_ << "]" << std::endl;
 		}
 
-		void* GetValue(int index) override {
-			return &value_;
-		}
+		U GetValue() { return value_; }
 
-	private:
+	protected:
 		U value_;
 	};
 
-	template<ExpressionType T>
+	class BooleanExpression : public ValueExpression<BOOLEAN_EXPRESSION, boolean> {
+	public:
+		BooleanExpression(boolean value, const location &l) : ValueExpression(value, l) {}
+		~BooleanExpression() {}
+
+		void Eval(LJ_Driver *driver) const {}
+	};
+
+	class IntExpression : public ValueExpression<INT_EXPRESSION, __int64> {
+	public:
+		IntExpression(__int64 value, const location &l) : ValueExpression(value, l) {}
+		~IntExpression() {}
+
+		void Eval(LJ_Driver *driver) const {}
+	};
+
+	class DoubleExpression : public ValueExpression<DOUBLE_EXPRESSION, double> {
+	public:
+		DoubleExpression(double value, const location &l) : ValueExpression(value, l) {}
+		~DoubleExpression() {}
+
+		void Eval(LJ_Driver *driver) const {}
+	};
+
+	class StringExpression : public ValueExpression<STRING_EXPRESSION, std::string> {
+	public:
+		StringExpression(std::string &value, const location &l) : ValueExpression(value, l) {}
+		~StringExpression() {}
+
+		void Eval(LJ_Driver *driver) const {}
+	};
+
+	class IdentifierExpression : public ValueExpression<IDENTIFIER_EXPRESSION, std::string> {
+	public:
+		IdentifierExpression(std::string &value, const location &l) : ValueExpression(value, l) {}
+		~IdentifierExpression() {}
+
+		void Eval(LJ_Driver *driver) const {}
+	};
+
 	class NullExpression : public Expression
 	{
 	public:
@@ -127,7 +166,7 @@ namespace LJ {
 		~NullExpression() {}
 
 		ExpressionType GetType() const override {
-			return T;
+			return NULL_EXPRESSION;
 		}
 
 		void Dump(int indent) const override {
@@ -135,16 +174,14 @@ namespace LJ {
 			std::cout << GetExpressionTypeString(GetType()) << std::endl;
 		}
 
-		void* GetValue(int index) override {
-			return NULL;
-		}
+		void Eval(LJ_Driver *driver) const {}
 	};
 
 	template<ExpressionType T>
 	class UnaryExpression : public Expression {
 	public:
-		UnaryExpression(Expression *e0, const location &l) : Expression(l), e0_(e0) {}
-		~UnaryExpression() { delete e0_; }
+		UnaryExpression(Expression *expr, const location &l) : Expression(l), expr_(expr) {}
+		~UnaryExpression() { delete expr_; }
 
 		ExpressionType GetType() const override {
 			return T;
@@ -153,15 +190,15 @@ namespace LJ {
 		void Dump(int indent) const override {
 			PrintIndent(indent++);
 			std::cout << GetExpressionTypeString(GetType()) << std::endl;
-			e0_->Dump(indent);
+			expr_->Dump(indent);
 		}
 
-		void* GetValue(int index) override {
-			return e0_;
+		Expression* GetExpression() override {
+			return expr_;
 		}
 
-	private:
-		Expression *e0_;
+	protected:
+		Expression *expr_;
 	};
 
 	template<class T>
