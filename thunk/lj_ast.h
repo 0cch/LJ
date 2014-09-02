@@ -119,7 +119,7 @@ namespace LJ {
 		U value_;
 	};
 
-	class BooleanExpression : public ValueExpression<BOOLEAN_EXPRESSION, boolean> {
+	class BooleanExpression : public ValueExpression < BOOLEAN_EXPRESSION, boolean > {
 	public:
 		BooleanExpression(boolean value, const location &l) : ValueExpression(value, l) {}
 		~BooleanExpression() {}
@@ -127,7 +127,7 @@ namespace LJ {
 		void Eval(LJ_Driver *driver) const {}
 	};
 
-	class IntExpression : public ValueExpression<INT_EXPRESSION, __int64> {
+	class IntExpression : public ValueExpression < INT_EXPRESSION, __int64 > {
 	public:
 		IntExpression(__int64 value, const location &l) : ValueExpression(value, l) {}
 		~IntExpression() {}
@@ -135,7 +135,7 @@ namespace LJ {
 		void Eval(LJ_Driver *driver) const {}
 	};
 
-	class DoubleExpression : public ValueExpression<DOUBLE_EXPRESSION, double> {
+	class DoubleExpression : public ValueExpression < DOUBLE_EXPRESSION, double > {
 	public:
 		DoubleExpression(double value, const location &l) : ValueExpression(value, l) {}
 		~DoubleExpression() {}
@@ -143,7 +143,7 @@ namespace LJ {
 		void Eval(LJ_Driver *driver) const {}
 	};
 
-	class StringExpression : public ValueExpression<STRING_EXPRESSION, std::string> {
+	class StringExpression : public ValueExpression < STRING_EXPRESSION, std::string > {
 	public:
 		StringExpression(std::string &value, const location &l) : ValueExpression(value, l) {}
 		~StringExpression() {}
@@ -151,7 +151,7 @@ namespace LJ {
 		void Eval(LJ_Driver *driver) const {}
 	};
 
-	class IdentifierExpression : public ValueExpression<IDENTIFIER_EXPRESSION, std::string> {
+	class IdentifierExpression : public ValueExpression < IDENTIFIER_EXPRESSION, std::string > {
 	public:
 		IdentifierExpression(std::string &value, const location &l) : ValueExpression(value, l) {}
 		~IdentifierExpression() {}
@@ -159,20 +159,42 @@ namespace LJ {
 		void Eval(LJ_Driver *driver) const {}
 	};
 
-	class NullExpression : public Expression
-	{
+	template<ExpressionType T>
+	class EmptyExpression : public Expression {
 	public:
-		NullExpression(location l) : Expression(l) {}
-		~NullExpression() {}
+		EmptyExpression(const location &l) : Expression(l) {}
+		~EmptyExpression() {}
 
 		ExpressionType GetType() const override {
-			return NULL_EXPRESSION;
+			return T;
 		}
 
 		void Dump(int indent) const override {
 			PrintIndent(indent);
 			std::cout << GetExpressionTypeString(GetType()) << std::endl;
 		}
+	};
+
+	class NullExpression : public EmptyExpression < NULL_EXPRESSION > {
+	public:
+		NullExpression(const location &l) : EmptyExpression(l) {}
+		~NullExpression() {}
+
+		void Eval(LJ_Driver *driver) const {}
+	};
+
+	class TrueExpression : public EmptyExpression < TRUE_EXPRESSION > {
+	public:
+		TrueExpression(const location &l) : EmptyExpression(l) {}
+		~TrueExpression() {}
+
+		void Eval(LJ_Driver *driver) const {}
+	};
+
+	class FalseExpression : public EmptyExpression < FALSE_EXPRESSION > {
+	public:
+		FalseExpression(const location &l) : EmptyExpression(l) {}
+		~FalseExpression() {}
 
 		void Eval(LJ_Driver *driver) const {}
 	};
@@ -201,6 +223,22 @@ namespace LJ {
 		Expression *expr_;
 	};
 
+	class MinusExpression : public UnaryExpression < MINUS_EXPRESSION > {
+	public:
+		MinusExpression(Expression *expr, const location &l) : UnaryExpression(expr, l) {}
+		~MinusExpression() {}
+
+		void Eval(LJ_Driver *driver) const {}
+	};
+
+	class ExclamationExpression : public UnaryExpression < EXCLAMATION_EXPRESSION > {
+	public:
+		ExclamationExpression(Expression *expr, const location &l) : UnaryExpression(expr, l) {}
+		~ExclamationExpression() {}
+
+		void Eval(LJ_Driver *driver) const {}
+	};
+
 	template<class T>
 	void DeleteElems(T &e)
 	{
@@ -213,10 +251,10 @@ namespace LJ {
 	class BinaryExpression : public Expression {
 	public:
 	public:
-		BinaryExpression(Expression *e0, Expression *e1, const location &l) : Expression(l), e0_(e0), e1_(e1) {}
+		BinaryExpression(Expression *left, Expression *right, const location &l) : Expression(l), left_(left), right_(right) {}
 		~BinaryExpression() {
-			delete e0_;
-			delete e1_;
+			delete left_;
+			delete right_;
 		}
 
 		ExpressionType GetType() const override {
@@ -226,27 +264,130 @@ namespace LJ {
 		void Dump(int indent) const override {
 			PrintIndent(indent++);
 			std::cout << GetExpressionTypeString(GetType()) << std::endl;
-			e0_->Dump(indent);
-			e1_->Dump(indent);
+			left_->Dump(indent);
+			right_->Dump(indent);
 		}
 
-		void* GetValue(int index) override {
-			if (index == 0) {
-				return e0_;
-			}
-			else {
-				return e1_;
-			}
-		}
+	protected:
+		Expression *left_;
+		Expression *right_;
+	};
 
-	private:
-		Expression *e0_;
-		Expression *e1_;
+	class AssignExpression : public BinaryExpression < ASSIGN_EXPRESSION > {
+	public:
+		AssignExpression(Expression *left, Expression *right, const location &l) : BinaryExpression(left, right, l) {}
+		~AssignExpression() {}
+
+		void Eval(LJ_Driver *driver) const {}
+	};
+
+	class AddExpression : public BinaryExpression < ADD_EXPRESSION > {
+	public:
+		AddExpression(Expression *left, Expression *right, const location &l) : BinaryExpression(left, right, l) {}
+		~AddExpression() {}
+
+		void Eval(LJ_Driver *driver) const {}
+	};
+
+	class SubExpression : public BinaryExpression < SUB_EXPRESSION > {
+	public:
+		SubExpression(Expression *left, Expression *right, const location &l) : BinaryExpression(left, right, l) {}
+		~SubExpression() {}
+
+		void Eval(LJ_Driver *driver) const {}
+	};
+
+	class MulExpression : public BinaryExpression < MUL_EXPRESSION > {
+	public:
+		MulExpression(Expression *left, Expression *right, const location &l) : BinaryExpression(left, right, l) {}
+		~MulExpression() {}
+
+		void Eval(LJ_Driver *driver) const {}
+	};
+
+	class DivExpression : public BinaryExpression < DIV_EXPRESSION > {
+	public:
+		DivExpression(Expression *left, Expression *right, const location &l) : BinaryExpression(left, right, l) {}
+		~DivExpression() {}
+
+		void Eval(LJ_Driver *driver) const {}
+	};
+
+	class ModExpression : public BinaryExpression < MOD_EXPRESSION > {
+	public:
+		ModExpression(Expression *left, Expression *right, const location &l) : BinaryExpression(left, right, l) {}
+		~ModExpression() {}
+
+		void Eval(LJ_Driver *driver) const {}
+	};
+
+	class EQExpression : public BinaryExpression < EQ_EXPRESSION > {
+	public:
+		EQExpression(Expression *left, Expression *right, const location &l) : BinaryExpression(left, right, l) {}
+		~EQExpression() {}
+
+		void Eval(LJ_Driver *driver) const {}
+	};
+
+	class NEExpression : public BinaryExpression < NE_EXPRESSION > {
+	public:
+		NEExpression(Expression *left, Expression *right, const location &l) : BinaryExpression(left, right, l) {}
+		~NEExpression() {}
+
+		void Eval(LJ_Driver *driver) const {}
+	};
+
+	class GTExpression : public BinaryExpression < GT_EXPRESSION > {
+	public:
+		GTExpression(Expression *left, Expression *right, const location &l) : BinaryExpression(left, right, l) {}
+		~GTExpression() {}
+
+		void Eval(LJ_Driver *driver) const {}
+	};
+
+	class GEExpression : public BinaryExpression < GE_EXPRESSION > {
+	public:
+		GEExpression(Expression *left, Expression *right, const location &l) : BinaryExpression(left, right, l) {}
+		~GEExpression() {}
+
+		void Eval(LJ_Driver *driver) const {}
+	};
+
+	class LTExpression : public BinaryExpression < LT_EXPRESSION > {
+	public:
+		LTExpression(Expression *left, Expression *right, const location &l) : BinaryExpression(left, right, l) {}
+		~LTExpression() {}
+
+		void Eval(LJ_Driver *driver) const {}
+	};
+
+	class LEExpression : public BinaryExpression < LE_EXPRESSION > {
+	public:
+		LEExpression(Expression *left, Expression *right, const location &l) : BinaryExpression(left, right, l) {}
+		~LEExpression() {}
+
+		void Eval(LJ_Driver *driver) const {}
+	};
+
+	class LogicalAndExpression : public BinaryExpression < LOGICAL_AND_EXPRESSION > {
+	public:
+		LogicalAndExpression(Expression *left, Expression *right, const location &l) : BinaryExpression(left, right, l) {}
+		~LogicalAndExpression() {}
+
+		void Eval(LJ_Driver *driver) const {}
+	};
+
+	class LogicalOrExpression : public BinaryExpression < LOGICAL_OR_EXPRESSION > {
+	public:
+		LogicalOrExpression(Expression *left, Expression *right, const location &l) : BinaryExpression(left, right, l) {}
+		~LogicalOrExpression() {}
+
+		void Eval(LJ_Driver *driver) const {}
 	};
 
 	typedef std::list<Expression *> ArgumentList;
 	template<>
-	class BinaryExpression<FUNCTION_CALL_EXPRESSION> : public Expression {
+	class BinaryExpression<FUNCTION_CALL_EXPRESSION> : public Expression{
 	public:
 	public:
 		BinaryExpression(const std::string &n0, ArgumentList *a1, const location &l) : Expression(l), n0_(n0), a1_(a1) {}
@@ -276,8 +417,8 @@ namespace LJ {
 			}
 		}
 
-		std::string& GetFunctionName() {return n0_;}
-		ArgumentList * GetArgList() {return a1_;}
+		std::string& GetFunctionName() { return n0_; }
+		ArgumentList * GetArgList() { return a1_; }
 
 	private:
 		std::string n0_;
@@ -478,7 +619,7 @@ namespace LJ {
 		void Dump(int indent) const override {
 			PrintIndent(indent++);
 			std::cout << GetStatementTypeString(GetType()) << std::endl;
-			e_->Dump(indent);		
+			e_->Dump(indent);
 			if (then_b_ != NULL) {
 				PrintIndent(indent);
 				then_b_->Dump(indent);
@@ -496,7 +637,7 @@ namespace LJ {
 				PrintIndent(indent);
 				else_b_->Dump(indent);
 			}
-			
+
 		}
 
 		void *GetValue(int index) override {
@@ -654,9 +795,9 @@ namespace LJ {
 			return FUNCTION_DEFINITION;
 		}
 
-		std::string& GetFunctionName() {return name_;}
-		ParameterList * GetParamList() {return p_;}
-		Block * GetBlock() {return b_;}
+		std::string& GetFunctionName() { return name_; }
+		ParameterList * GetParamList() { return p_; }
+		Block * GetBlock() { return b_; }
 
 	private:
 		location loc_;
